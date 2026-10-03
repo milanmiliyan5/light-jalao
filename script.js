@@ -256,6 +256,19 @@ const achievementToastTitle = document.getElementById("achievementToastTitle");
 const achievementToastCopy = document.getElementById("achievementToastCopy");
 const installAppBtn = document.getElementById("installAppBtn");
 const settingsBtn = document.getElementById("settingsBtn");
+const profileBtn = document.getElementById("profileBtn");
+const homeProfileAvatar = document.getElementById("homeProfileAvatar");
+const homeProfileName = document.getElementById("homeProfileName");
+const profileAvatarPreview = document.getElementById("profileAvatarPreview");
+const profilePreviewName = document.getElementById("profilePreviewName");
+const profilePlayerId = document.getElementById("profilePlayerId");
+const profileNameInput = document.getElementById("profileNameInput");
+const emojiAvatarGrid = document.getElementById("emojiAvatarGrid");
+const profileStars = document.getElementById("profileStars");
+const profileCleared = document.getElementById("profileCleared");
+const profileEndless = document.getElementById("profileEndless");
+const profileError = document.getElementById("profileError");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
 const soundToggleBtn = document.getElementById("soundToggleBtn");
 const hapticToggleBtn = document.getElementById("hapticToggleBtn");
 const soundSettingState = document.getElementById("soundSettingState");
@@ -296,6 +309,41 @@ let activeDailyKey = "";
 let endlessRun = 0;
 let endlessSeedBase = 0;
 
+const PROFILE_AVATARS = [
+  "😎","🤩","😄","😁","🥳","🤠","🕶️","🤖",
+  "👾","👽","🧠","⚡","🔥","🌟","🦁","🐯",
+  "🐼","🦊","🐸","🐵","🐧","🦄","🐲","🦖"
+];
+
+function generateLocalPlayerId() {
+  let value = "";
+  try {
+    const bytes = new Uint8Array(4);
+    crypto.getRandomValues(bytes);
+    value = Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
+  } catch {
+    value = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, "0").toUpperCase();
+  }
+  return `LJ-${value}`;
+}
+
+function defaultProfile() {
+  const playerId = generateLocalPlayerId();
+  return {
+    playerId,
+    name: `Player ${playerId.slice(-4)}`,
+    avatar: "😎"
+  };
+}
+
+function normalizeProfileName(value) {
+  return String(value || "")
+    .replace(/[^a-zA-Z0-9 _.-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 18);
+}
+
 const progress = loadProgress();
 soundEnabled = progress.settings?.sound !== false;
 hapticsEnabled = progress.settings?.haptics !== false;
@@ -320,7 +368,14 @@ function loadProgress() {
         : { sound: true, haptics: true },
       hints: raw.hints && typeof raw.hints === "object"
         ? raw.hints
-        : { count: 5, lastRefillAt: Date.now() }
+        : { count: 5, lastRefillAt: Date.now() },
+      profile: raw.profile && typeof raw.profile === "object"
+        ? {
+            playerId: String(raw.profile.playerId || generateLocalPlayerId()),
+            name: normalizeProfileName(raw.profile.name) || "Player",
+            avatar: PROFILE_AVATARS.includes(raw.profile.avatar) ? raw.profile.avatar : "😎"
+          }
+        : defaultProfile()
     };
   } catch {
     return {
@@ -332,7 +387,8 @@ function loadProgress() {
       endlessBest: 0,
       achievements: {},
       settings: { sound: true, haptics: true },
-      hints: { count: 5, lastRefillAt: Date.now() }
+      hints: { count: 5, lastRefillAt: Date.now() },
+      profile: defaultProfile()
     };
   }
 }
@@ -813,6 +869,99 @@ function renderWorldProgress() {
   });
 }
 
+let pendingProfileAvatar = "😎";
+
+function ensureProfile() {
+  if (!progress.profile || typeof progress.profile !== "object") {
+    progress.profile = defaultProfile();
+  }
+
+  if (!progress.profile.playerId) progress.profile.playerId = generateLocalPlayerId();
+  progress.profile.name = normalizeProfileName(progress.profile.name) || `Player ${progress.profile.playerId.slice(-4)}`;
+  if (!PROFILE_AVATARS.includes(progress.profile.avatar)) progress.profile.avatar = "😎";
+}
+
+function renderProfileAvatarGrid() {
+  if (!emojiAvatarGrid) return;
+  emojiAvatarGrid.innerHTML = "";
+
+  PROFILE_AVATARS.forEach(emoji => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "emoji-avatar-option";
+    button.textContent = emoji;
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-label", `Avatar ${emoji}`);
+    button.setAttribute("aria-selected", emoji === pendingProfileAvatar ? "true" : "false");
+    button.classList.toggle("selected", emoji === pendingProfileAvatar);
+
+    button.addEventListener("click", () => {
+      pendingProfileAvatar = emoji;
+      profileAvatarPreview.textContent = emoji;
+      emojiAvatarGrid.querySelectorAll(".emoji-avatar-option").forEach(option => {
+        const selected = option.textContent === emoji;
+        option.classList.toggle("selected", selected);
+        option.setAttribute("aria-selected", selected ? "true" : "false");
+      });
+      playClick();
+      vibrate(12);
+    });
+
+    emojiAvatarGrid.appendChild(button);
+  });
+}
+
+function updateHomeProfile() {
+  ensureProfile();
+  if (homeProfileAvatar) homeProfileAvatar.textContent = progress.profile.avatar;
+  if (homeProfileName) homeProfileName.textContent = progress.profile.name;
+}
+
+function openProfile() {
+  ensureProfile();
+  pendingProfileAvatar = progress.profile.avatar;
+
+  profileAvatarPreview.textContent = progress.profile.avatar;
+  profilePreviewName.textContent = progress.profile.name;
+  profilePlayerId.textContent = progress.profile.playerId;
+  profileNameInput.value = progress.profile.name;
+  profileStars.textContent = totalEarnedStars();
+  profileCleared.textContent = completedLevelsCount();
+  profileEndless.textContent = progress.endlessBest || 0;
+
+  profileError.textContent = "";
+  profileError.classList.add("hidden");
+  renderProfileAvatarGrid();
+  showModal("profileModal");
+
+  window.setTimeout(() => profileNameInput?.focus(), 180);
+}
+
+function savePlayerProfile() {
+  ensureProfile();
+
+  const name = normalizeProfileName(profileNameInput.value);
+  if (name.length < 3) {
+    profileError.textContent = "Player name kam se kam 3 characters ka rakho.";
+    profileError.classList.remove("hidden");
+    vibrate(18);
+    return;
+  }
+
+  progress.profile.name = name;
+  progress.profile.avatar = PROFILE_AVATARS.includes(pendingProfileAvatar)
+    ? pendingProfileAvatar
+    : "😎";
+
+  saveProgress();
+  updateHomeProfile();
+  profilePreviewName.textContent = progress.profile.name;
+  profileError.classList.add("hidden");
+  hideModal("profileModal");
+  playGameSound("reward");
+  vibrate([15, 20, 35]);
+}
+
 function updateHomeScreen() {
   const level = LEVELS[currentLevel];
   const completed = completedLevelsCount();
@@ -833,6 +982,7 @@ function updateHomeScreen() {
   renderAchievements();
   updateHintUI();
   syncSettingsUI();
+  updateHomeProfile();
 }
 
 function showHome() {
@@ -1682,6 +1832,7 @@ function showModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
   if (id === "hintRechargeModal") updateHintUI();
+  if (id === "profileModal") updateHomeProfile();
   if (id === "settingsModal") {
     syncSettingsUI();
     window.setTimeout(measureRenderFps, 650);
@@ -1911,6 +2062,7 @@ function vibrate(pattern) {
 function closeTopGameModal() {
   const priority = [
     "hintRechargeModal",
+    "profileModal",
     "settingsModal",
     "achievementsModal",
     "journeyModal",
@@ -2036,6 +2188,19 @@ continueBtn.addEventListener("click", () => {
 homeLevelsBtn.addEventListener("click", () => showModal("levelsModal"));
 homeHelpBtn.addEventListener("click", () => showModal("helpModal"));
 settingsBtn?.addEventListener("click", () => showModal("settingsModal"));
+profileBtn?.addEventListener("click", openProfile);
+saveProfileBtn?.addEventListener("click", savePlayerProfile);
+profileNameInput?.addEventListener("input", () => {
+  const cleaned = normalizeProfileName(profileNameInput.value);
+  profilePreviewName.textContent = cleaned || "Player";
+  profileError?.classList.add("hidden");
+});
+profileNameInput?.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    savePlayerProfile();
+  }
+});
 soundToggleBtn?.addEventListener("click", () => setSoundEnabled(!soundEnabled));
 hapticToggleBtn?.addEventListener("click", () => setHapticsEnabled(!hapticsEnabled));
 rewardAdBtn?.addEventListener("click", requestRewardedHint);
@@ -2108,10 +2273,12 @@ document.addEventListener("keydown", event => {
     hideModal("journeyModal");
     hideModal("achievementsModal");
     hideModal("settingsModal");
+    hideModal("profileModal");
     hideModal("hintRechargeModal");
   }
 });
 
+ensureProfile();
 normalizeHints();
 syncHintEnergy();
 syncSettingsUI();
