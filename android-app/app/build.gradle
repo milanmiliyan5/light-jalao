@@ -10,8 +10,8 @@ android {
         applicationId "com.lightjalao.game"
         minSdk 24
         targetSdk 35
-        versionCode 14
-        versionName "1.5.0"
+        versionCode 15
+        versionName "1.6.0"
     }
 
     signingConfigs {
@@ -39,6 +39,39 @@ android {
             excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt']
         }
     }
+
+    sourceSets {
+        main {
+            res.srcDir file("$buildDir/generated/res/branding")
+        }
+    }
+}
+
+def brandingOutputDir = file("$buildDir/generated/res/branding")
+
+tasks.register("generateBrandingAssets") {
+    def brandingParts = fileTree(file("../branding")) {
+        include "logo.b64.part*"
+    }.files.sort { a, b -> a.name <=> b.name }
+
+    inputs.files(brandingParts)
+
+    def logoOutput = file("$brandingOutputDir/drawable-nodpi/light_jalao_logo.webp")
+    outputs.file(logoOutput)
+
+    doLast {
+        if (brandingParts.isEmpty()) {
+            throw new GradleException("Light Jalao branding data is missing")
+        }
+
+        logoOutput.parentFile.mkdirs()
+        def encodedLogo = brandingParts.collect { it.getText("UTF-8").trim() }.join("")
+        logoOutput.bytes = java.util.Base64.getDecoder().decode(encodedLogo)
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("generateBrandingAssets")
 }
 
 
