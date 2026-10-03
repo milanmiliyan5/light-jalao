@@ -18,105 +18,134 @@
   <link rel="icon" href="icons/light-jalao-icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/light-jalao-icon.svg" />
   <title>Light Jalao 💡</title>
-  <link rel="stylesheet" href="style.css?v=20261003-fps-meter-v2" />
+  <link rel="stylesheet" href="style.css?v=20261003-arcade-home-v1" />
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
   <div class="bg-orb bg-orb-two"></div>
 
-  <section class="home-screen" id="homeScreen" aria-label="Light Jalao home">
-    <div class="home-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="home-particles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <section class="home-screen arcade-home" id="homeScreen" aria-label="Light Jalao home">
+    <div class="arcade-scanlines" aria-hidden="true"></div>
+    <div class="arcade-glow glow-one" aria-hidden="true"></div>
+    <div class="arcade-glow glow-two" aria-hidden="true"></div>
 
-    <div class="home-content game-home">
-      <div class="home-top-strip">
-        <span class="offline-ready"><i></i> OFFLINE READY</span>
-        <button class="home-settings-btn" id="settingsBtn" type="button" aria-label="Game settings">⚙</button>
-      </div>
-
-      <div class="home-hero">
-        <div class="home-logo" aria-hidden="true">
-          <span class="energy-ring ring-one"></span>
-          <span class="energy-ring ring-two"></span>
-          <span class="home-bulb"><i></i><b></b></span>
-          <span class="home-circuit-line line-a"></span>
-          <span class="home-circuit-line line-b"></span>
-          <span class="home-node node-a"></span>
-          <span class="home-node node-b"></span>
+    <div class="home-content arcade-home-content">
+      <div class="arcade-topbar">
+        <span class="arcade-status"><i></i> OFFLINE READY</span>
+        <div class="arcade-titleplate">
+          <span>⚡</span>
+          <strong>LIGHT JALAO</strong>
+          <small>ARCADE MODE</small>
         </div>
-        <span class="home-kicker">ELECTRIC PUZZLE ADVENTURE</span>
-        <h1>Light <em>Jalao</em></h1>
-        <p class="home-subtitle">Rotate. Connect. Power up. Make the whole grid glow.</p>
+        <button class="home-settings-btn arcade-settings-btn" id="settingsBtn" type="button" aria-label="Game settings">⚙</button>
       </div>
 
-      <section class="adventure-card">
-        <div class="adventure-card-glow" aria-hidden="true"></div>
-        <div class="adventure-head">
+      <section class="arcade-hero">
+        <div class="arcade-logo" aria-hidden="true">
+          <span class="arcade-ring ring-a"></span>
+          <span class="arcade-ring ring-b"></span>
+          <span class="arcade-bulb"><i></i><b></b></span>
+          <span class="arcade-spark s1"></span>
+          <span class="arcade-spark s2"></span>
+          <span class="arcade-spark s3"></span>
+        </div>
+        <div class="arcade-brand-copy">
+          <span class="arcade-eyebrow">CONNECT • POWER • GLOW</span>
+          <h1>Light <em>Jalao</em></h1>
+          <p>Complete the circuit. Light every bulb. Beat every world.</p>
+        </div>
+      </section>
+
+      <section class="arcade-stage-card">
+        <div class="stage-grid" aria-hidden="true"></div>
+        <div class="stage-top">
           <div>
-            <small>CONTINUE ADVENTURE</small>
+            <small>CURRENT STAGE</small>
             <strong id="homeWorld">Spark Lab</strong>
             <span id="homeLevel">Level 1 / 500</span>
           </div>
-          <div class="world-energy-core" aria-hidden="true"><i></i><b>⚡</b></div>
+          <div class="stage-badge">
+            <small>POWER</small>
+            <b>⚡</b>
+          </div>
         </div>
 
-        <div class="home-progress-track">
+        <div class="arcade-progress-track">
           <div class="home-progress-fill" id="homeProgressFill"></div>
         </div>
 
-        <button class="home-play-btn" id="continueBtn">
-          <span class="play-icon">▶</span>
-          <span><small>PLAY NOW</small><strong id="continueLabel">Start Level 1</strong></span>
-          <b>›</b>
+        <button class="arcade-play-btn home-play-btn" id="continueBtn">
+          <span class="arcade-play-icon">▶</span>
+          <span>
+            <small>CONTINUE RUN</small>
+            <strong id="continueLabel">Start Level 1</strong>
+          </span>
+          <b>GO</b>
         </button>
       </section>
 
-      <div class="game-section-title"><span>GAME MODES</span><i></i></div>
+      <div class="arcade-section-label"><span>SELECT MODE</span><i></i></div>
 
-      <div class="home-special-modes">
-        <button class="special-mode-card daily-mode-card" id="dailyBtn">
-          <span class="special-mode-icon">☀</span>
-          <span class="special-mode-copy">
-            <small>FRESH CIRCUIT</small>
+      <div class="arcade-mode-grid home-special-modes">
+        <button class="arcade-mode-card arcade-daily daily-mode-card" id="dailyBtn">
+          <span class="arcade-mode-symbol">☀</span>
+          <span class="arcade-mode-text">
+            <small>DAILY DROP</small>
             <strong>Daily Challenge</strong>
             <em id="dailyStatus">New puzzle today</em>
           </span>
-          <b>›</b>
+          <b>PLAY</b>
         </button>
 
-        <button class="special-mode-card endless-mode-card" id="endlessBtn">
-          <span class="special-mode-icon">∞</span>
-          <span class="special-mode-copy">
-            <small>KEEP GOING</small>
+        <button class="arcade-mode-card arcade-endless endless-mode-card" id="endlessBtn">
+          <span class="arcade-mode-symbol">∞</span>
+          <span class="arcade-mode-text">
+            <small>INFINITE RUN</small>
             <strong>Endless Mode</strong>
             <em id="endlessStatus">Best run: 0</em>
           </span>
-          <b>›</b>
+          <b>PLAY</b>
         </button>
       </div>
 
-      <div class="home-game-menu">
-        <button id="homeLevelsBtn"><span>▦</span><strong>Levels</strong></button>
-        <button id="journeyBtn"><span>🌍</span><strong>Worlds</strong><small id="journeySummary">0 / 13</small></button>
-        <button id="achievementsBtn"><span>🏆</span><strong>Trophies</strong><small id="achievementCount">0 / 12</small></button>
-        <button id="homeHelpBtn"><span>?</span><strong>How to Play</strong></button>
+      <div class="arcade-shortcuts home-game-menu">
+        <button id="homeLevelsBtn">
+          <span class="shortcut-icon">▦</span>
+          <strong>Levels</strong>
+          <small>500</small>
+        </button>
+        <button id="journeyBtn">
+          <span class="shortcut-icon">🌍</span>
+          <strong>Worlds</strong>
+          <small id="journeySummary">0 / 13</small>
+        </button>
+        <button id="achievementsBtn">
+          <span class="shortcut-icon">🏆</span>
+          <strong>Trophies</strong>
+          <small id="achievementCount">0 / 12</small>
+        </button>
+        <button id="homeHelpBtn">
+          <span class="shortcut-icon">?</span>
+          <strong>Guide</strong>
+          <small>HOW TO</small>
+        </button>
       </div>
 
-      <div class="player-power-strip">
-        <span><b>⭐</b><strong id="homeStars">0</strong><small>Stars</small></span>
+      <div class="arcade-player-strip player-power-strip">
+        <span><b>⭐</b><strong id="homeStars">0</strong><small>STARS</small></span>
         <i></i>
-        <span><b>🔥</b><strong id="homeStreak">0</strong><small>Streak</small></span>
+        <span><b>🔥</b><strong id="homeStreak">0</strong><small>STREAK</small></span>
         <i></i>
-        <span><b>⚡</b><strong id="homeCompleted">0</strong><small>Cleared</small></span>
+        <span><b>⚡</b><strong id="homeCompleted">0</strong><small>CLEARED</small></span>
       </div>
 
-      <button class="install-app-btn" id="installAppBtn" type="button">
+      <button class="install-app-btn arcade-install-btn" id="installAppBtn" type="button">
         <span class="install-app-icon">⬇</span>
-        <span><small>INSTALL ON THIS PHONE</small><strong>Install Light Jalao App</strong></span>
+        <span><small>INSTALL</small><strong>Light Jalao App</strong></span>
         <b>→</b>
       </button>
 
-      <p class="home-footer">500 levels • Daily Challenge • Endless Mode</p>
+      <p class="home-footer arcade-footer">500 LEVELS • 13 WORLDS • DAILY • ENDLESS</p>
     </div>
   </section>
 
