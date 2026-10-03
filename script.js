@@ -1534,6 +1534,11 @@ function vibrate(pattern) {
 
 let deferredInstallPrompt = null;
 
+function isNativeAndroidWrapper() {
+  return new URLSearchParams(window.location.search).get("android") === "1" ||
+    navigator.userAgent.includes("LightJalaoAndroid");
+}
+
 function isStandaloneApp() {
   return location.protocol === "file:" ||
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -1541,7 +1546,7 @@ function isStandaloneApp() {
 }
 
 function updateInstallButton() {
-  const installed = isStandaloneApp();
+  const installed = isStandaloneApp() || isNativeAndroidWrapper();
   document.body.classList.toggle("app-installed", installed);
 
   if (!installAppBtn) return;
