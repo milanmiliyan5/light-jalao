@@ -245,6 +245,112 @@ button:focus-visible {
   transition: width 0.35s ease;
 }
 
+.challenge-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: -2px 0 15px;
+  min-width: 0;
+}
+
+.challenge-badge {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid rgba(89,232,255,.16);
+  border-radius: 999px;
+  color: #a8f3ff;
+  background: rgba(89,232,255,.065);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.challenge-rule {
+  min-width: 0;
+  overflow: hidden;
+  color: #6f8493;
+  font-size: 9px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile.fixed-tile {
+  cursor: not-allowed;
+  border-color: rgba(89,232,255,.24);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(89,232,255,.055), transparent 52%),
+    linear-gradient(145deg, #112a37, #0b1b26);
+}
+
+.tile.fixed-tile:active {
+  transform: none;
+}
+
+.lock-device {
+  position: absolute;
+  z-index: 7;
+  top: 8%;
+  right: 8%;
+  width: 17%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(168,243,255,.55);
+  border-radius: 28%;
+  background: rgba(7,28,38,.88);
+  box-shadow: 0 0 9px rgba(89,232,255,.16);
+}
+
+.lock-device::before {
+  content: "";
+  position: absolute;
+  left: 25%;
+  top: -43%;
+  width: 50%;
+  height: 58%;
+  border: 2px solid #9eefff;
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+}
+
+.obstacle-tile {
+  cursor: default;
+  border-color: rgba(255,255,255,.045);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,.025) 0 6px,
+      rgba(0,0,0,.055) 6px 12px
+    ),
+    linear-gradient(145deg, #0b1720, #071119);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.24);
+}
+
+.obstacle-tile::after {
+  content: "";
+  position: absolute;
+  inset: 25%;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 22%;
+  background:
+    radial-gradient(circle at 28% 28%, rgba(255,255,255,.08) 0 5%, transparent 6%),
+    radial-gradient(circle at 72% 72%, rgba(255,255,255,.08) 0 5%, transparent 6%),
+    #0d1d27;
+}
+
+.obstacle-mark {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #516773;
+  font-size: clamp(12px, 3.5vw, 20px);
+  font-weight: 900;
+}
+
 .mission-strip {
   position: relative;
   z-index: 2;
