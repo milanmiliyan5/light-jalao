@@ -288,6 +288,8 @@ const musicToggleBtn = document.getElementById("musicToggleBtn");
 const hapticToggleBtn = document.getElementById("hapticToggleBtn");
 const soundSettingState = document.getElementById("soundSettingState");
 const musicSettingState = document.getElementById("musicSettingState");
+const masterVolumeSlider = document.getElementById("masterVolumeSlider");
+const masterVolumeValue = document.getElementById("masterVolumeValue");
 const hapticSettingState = document.getElementById("hapticSettingState");
 const hintEnergyText = document.getElementById("hintEnergyText");
 const hintMiniTimer = document.getElementById("hintMiniTimer");
@@ -315,7 +317,12 @@ let locked = false;
 let soundEnabled = true;
 let musicEnabled = true;
 let hapticsEnabled = true;
+let masterVolumePercent = 120;
 let audioContext = null;
+let sfxMasterGain = null;
+let musicMasterGain = null;
+let audioCompressor = null;
+let audioOutputGain = null;
 let musicTimer = null;
 let musicBarIndex = 0;
 const activeMusicNodes = new Set();
@@ -367,6 +374,7 @@ function normalizeProfileName(value) {
 const progress = loadProgress();
 soundEnabled = progress.settings?.sound !== false;
 musicEnabled = progress.settings?.music !== false;
+masterVolumePercent = Math.max(40, Math.min(150, Number(progress.settings?.volume) || 120));
 hapticsEnabled = progress.settings?.haptics !== false;
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
 
@@ -386,7 +394,7 @@ function loadProgress() {
       achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {},
       settings: raw.settings && typeof raw.settings === "object"
         ? raw.settings
-        : { sound: true, music: true, haptics: true },
+        : { sound: true, music: true, volume: 120, haptics: true },
       hints: raw.hints && typeof raw.hints === "object"
         ? raw.hints
         : { count: 5, lastRefillAt: Date.now() },
@@ -407,7 +415,7 @@ function loadProgress() {
       daily: {},
       endlessBest: 0,
       achievements: {},
-      settings: { sound: true, music: true, haptics: true },
+      settings: { sound: true, music: true, volume: 120, haptics: true },
       hints: { count: 5, lastRefillAt: Date.now() },
       profile: defaultProfile()
     };
@@ -1920,11 +1928,48 @@ function makeConfetti() {
   }
 }
 
+function applyAudioLevels() {
+  const ratio = Math.max(.4, Math.min(1.5, masterVolumePercent / 100));
+
+  if (sfxMasterGain) {
+    sfxMasterGain.gain.setTargetAtTime(3.15 * ratio, audioContext?.currentTime || 0, .015);
+  }
+
+  if (musicMasterGain) {
+    musicMasterGain.gain.setTargetAtTime(2.55 * ratio, audioContext?.currentTime || 0, .02);
+  }
+
+  if (audioOutputGain) {
+    audioOutputGain.gain.setTargetAtTime(1.12, audioContext?.currentTime || 0, .02);
+  }
+}
+
 function getAudioContext() {
   if (!audioContext) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) audioContext = new AudioContextClass();
+    if (AudioContextClass) {
+      audioContext = new AudioContextClass();
+
+      sfxMasterGain = audioContext.createGain();
+      musicMasterGain = audioContext.createGain();
+      audioCompressor = audioContext.createDynamicsCompressor();
+      audioOutputGain = audioContext.createGain();
+
+      audioCompressor.threshold.setValueAtTime(-18, audioContext.currentTime);
+      audioCompressor.knee.setValueAtTime(20, audioContext.currentTime);
+      audioCompressor.ratio.setValueAtTime(5, audioContext.currentTime);
+      audioCompressor.attack.setValueAtTime(.003, audioContext.currentTime);
+      audioCompressor.release.setValueAtTime(.18, audioContext.currentTime);
+
+      sfxMasterGain.connect(audioCompressor);
+      musicMasterGain.connect(audioCompressor);
+      audioCompressor.connect(audioOutputGain);
+      audioOutputGain.connect(audioContext.destination);
+
+      applyAudioLevels();
+    }
   }
+
   if (audioContext?.state === "suspended") audioContext.resume().catch(() => {});
   return audioContext;
 }
@@ -1945,7 +1990,7 @@ function playTone(freq, duration = .07, volume = .028, delay = 0, type = "sine")
   gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(sfxMasterGain || ctx.destination);
   oscillator.start(start);
   oscillator.stop(start + duration + .03);
 }
@@ -2037,7 +2082,7 @@ function playMusicTone(freq, duration = .32, volume = .005, delay = 0, type = "s
   gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(musicMasterGain || ctx.destination);
   activeMusicNodes.add(oscillator);
   oscillator.onended = () => activeMusicNodes.delete(oscillator);
   oscillator.start(start);
@@ -2188,6 +2233,9 @@ function syncSettingsUI() {
   if (musicSettingState) musicSettingState.textContent = musicEnabled ? "ON" : "OFF";
   musicToggleBtn?.classList.toggle("off", !musicEnabled);
 
+  if (masterVolumeSlider) masterVolumeSlider.value = String(masterVolumePercent);
+  if (masterVolumeValue) masterVolumeValue.textContent = `${masterVolumePercent}%`;
+
   if (hapticSettingState) hapticSettingState.textContent = hapticsEnabled ? "ON" : "OFF";
   hapticToggleBtn?.classList.toggle("off", !hapticsEnabled);
 }
@@ -2210,6 +2258,19 @@ function setMusicEnabled(enabled) {
     startBackgroundMusic();
   } else {
     stopBackgroundMusic();
+  }
+}
+
+function setMasterVolume(value, persist = true) {
+  masterVolumePercent = Math.max(40, Math.min(150, Math.round(Number(value) || 120)));
+  applyAudioLevels();
+
+  if (masterVolumeSlider) masterVolumeSlider.value = String(masterVolumePercent);
+  if (masterVolumeValue) masterVolumeValue.textContent = `${masterVolumePercent}%`;
+
+  if (persist) {
+    progress.settings.volume = masterVolumePercent;
+    saveProgress();
   }
 }
 
@@ -2382,6 +2443,11 @@ profileNameInput?.addEventListener("keydown", event => {
 });
 soundToggleBtn?.addEventListener("click", () => setSoundEnabled(!soundEnabled));
 musicToggleBtn?.addEventListener("click", () => setMusicEnabled(!musicEnabled));
+masterVolumeSlider?.addEventListener("input", () => setMasterVolume(masterVolumeSlider.value, false));
+masterVolumeSlider?.addEventListener("change", () => {
+  setMasterVolume(masterVolumeSlider.value, true);
+  playGameSound("toggle");
+});
 hapticToggleBtn?.addEventListener("click", () => setHapticsEnabled(!hapticsEnabled));
 rewardAdBtn?.addEventListener("click", requestRewardedHint);
 battleBtn?.addEventListener("click", openBattleArena);
