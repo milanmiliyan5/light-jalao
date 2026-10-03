@@ -1875,6 +1875,50 @@ function vibrate(pattern) {
   if ("vibrate" in navigator) navigator.vibrate(pattern);
 }
 
+function closeTopGameModal() {
+  const priority = [
+    "hintRechargeModal",
+    "settingsModal",
+    "achievementsModal",
+    "journeyModal",
+    "levelsModal",
+    "helpModal"
+  ];
+
+  for (const id of priority) {
+    const modal = document.getElementById(id);
+    if (modal && !modal.classList.contains("hidden")) {
+      hideModal(id);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+window.handleNativeBack = function handleNativeBack() {
+  // Level-complete modal should not accidentally exit the app.
+  const winModal = document.getElementById("winModal");
+  if (winModal && !winModal.classList.contains("hidden")) {
+    hideModal("winModal");
+    showHome();
+    return true;
+  }
+
+  if (closeTopGameModal()) {
+    return true;
+  }
+
+  // Any active puzzle/mode returns to the main game menu first.
+  if (homeScreen && homeScreen.classList.contains("hidden")) {
+    showHome();
+    return true;
+  }
+
+  // Already on Home: let Android perform the normal app exit.
+  return false;
+};
+
 let deferredInstallPrompt = null;
 
 function isNativeAndroidWrapper() {
