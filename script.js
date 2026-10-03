@@ -908,6 +908,8 @@ function rotateTile(index) {
   if (rotor) rotor.style.setProperty("--rot", rotations[index]);
 
   tile?.classList.remove("hint");
+  tile?.removeAttribute("data-hint-turns");
+  tile?.removeAttribute("data-hint-label");
   playClick();
   vibrate(12);
 
@@ -1021,59 +1023,130 @@ function restartLevel() {
   playTone(300, .06, .025);
 }
 
-function showHint() {
-  if (locked) return;
+function solvedDistanceFromSource() {
+  const size = activeLevel.size;
+  const distance = Array(solvedMasks.length).fill(Infinity);
+  const queue = [0];
+  distance[0] = 0;
 
-  let target = null;
-  const frontier = [];
-
-  for (const index of powered) {
-    const size = activeLevel.size;
-    const [row, col] = rowCol(index, size);
+  while (queue.length) {
+    const current = queue.shift();
+    const [row, col] = rowCol(current, size);
+    const mask = solvedMasks[current];
 
     for (const dir of DIRS) {
-      if (!(solvedMasks[index] & dir.bit)) continue;
+      if (!(mask & dir.bit)) continue;
+
       const nr = row + dir.dr;
       const nc = col + dir.dc;
       if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
 
       const next = indexOf(nr, nc, size);
-      if (!powered.has(next) && next !== 0) frontier.push(next);
+      if (blockedCells.has(next)) continue;
+      if (!(solvedMasks[next] & dir.opposite)) continue;
+
+      if (distance[next] === Infinity) {
+        distance[next] = distance[current] + 1;
+        queue.push(next);
+      }
     }
   }
 
-  target = frontier.find(index =>
-    !fixedTiles.has(index) &&
-    !blockedCells.has(index) &&
-    currentMask(index) !== solvedMasks[index]
-  );
+  return distance;
+}
 
-  if (target === undefined || target === null) {
-    target = solvedMasks.findIndex((mask, index) =>
-      index !== 0 &&
-      mask !== 0 &&
-      !fixedTiles.has(index) &&
-      !blockedCells.has(index) &&
-      currentMask(index) !== mask
-    );
+function clockwiseTurnsToSolution(index) {
+  const solved = solvedMasks[index];
+  const currentRotation = rotations[index] || 0;
+
+  for (let taps = 0; taps < 4; taps += 1) {
+    const candidate = rotateMask(solved, (currentRotation + taps) % 4);
+    if (masksEquivalent(candidate, solved)) return taps;
   }
 
-  if (target < 0 || target === null || target === undefined) {
-    statusText.textContent = "The wire directions look right — check the last connection.";
+  return 0;
+}
+
+function incorrectRotatableTiles() {
+  const distances = solvedDistanceFromSource();
+
+  return solvedMasks
+    .map((mask, index) => ({
+      index,
+      mask,
+      distance: distances[index],
+      taps: clockwiseTurnsToSolution(index)
+    }))
+    .filter(item =>
+      item.index !== 0 &&
+      item.mask !== 0 &&
+      !fixedTiles.has(item.index) &&
+      !blockedCells.has(item.index) &&
+      item.taps > 0
+    )
+    .sort((a, b) => {
+      if (a.distance !== b.distance) return a.distance - b.distance;
+
+      const aPowered = powered.has(a.index) ? 0 : 1;
+      const bPowered = powered.has(b.index) ? 0 : 1;
+      if (aPowered !== bPowered) return aPowered - bPowered;
+
+      return a.index - b.index;
+    });
+}
+
+function clearHintMarkers() {
+  boardEl.querySelectorAll(".tile.hint").forEach(tile => {
+    tile.classList.remove("hint");
+    tile.removeAttribute("data-hint-turns");
+    tile.removeAttribute("data-hint-label");
+  });
+}
+
+function showHint() {
+  if (locked) return;
+
+  clearHintMarkers();
+  const wrongTiles = incorrectRotatableTiles();
+
+  if (!wrongTiles.length) {
+    statusText.textContent = "Smart Hint: all wire directions are correct. Checking the final circuit…";
+    updatePower(true);
+    playTone(880, .09, .025);
     return;
   }
 
+  const targetInfo = wrongTiles[0];
+  const target = targetInfo.index;
+  const taps = targetInfo.taps;
   const tile = getTile(target);
-  tile?.classList.remove("hint");
+  const [row, col] = rowCol(target, activeLevel.size);
+  const remaining = wrongTiles.length;
+
   if (tile) {
+    tile.setAttribute("data-hint-turns", `↻${taps}`);
+    tile.setAttribute(
+      "data-hint-label",
+      `Row ${row + 1}, column ${col + 1}: rotate clockwise ${taps} time${taps === 1 ? "" : "s"}`
+    );
     void tile.offsetWidth;
     tile.classList.add("hint");
   }
 
-  const [row, col] = rowCol(target, activeLevel.size);
-  statusText.textContent = `Hint: rotate the glowing tile at row ${row + 1}, column ${col + 1}.`;
-  playTone(760, .08, .025);
-  window.setTimeout(() => tile?.classList.remove("hint"), 1900);
+  const turnText = taps === 1 ? "1 baar" : `${taps} baar`;
+  const mistakeText = remaining === 1 ? "last wrong wire" : `${remaining} wrong wires remaining`;
+
+  statusText.textContent =
+    `Smart Hint: Row ${row + 1}, Column ${col + 1} wali glowing tile ko clockwise ${turnText} tap karo • ${mistakeText}.`;
+
+  playTone(760, .1, .03);
+  vibrate([18, 24, 18]);
+
+  window.setTimeout(() => {
+    tile?.classList.remove("hint");
+    tile?.removeAttribute("data-hint-turns");
+    tile?.removeAttribute("data-hint-label");
+  }, 4200);
 }
 
 function completeLevel() {
