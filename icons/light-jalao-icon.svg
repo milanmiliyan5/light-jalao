@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#173047"/>
+      <stop offset="1" stop-color="#061018"/>
+    </radialGradient>
+    <radialGradient id="bulb" cx="38%" cy="28%" r="70%">
+      <stop offset="0" stop-color="#fffde0"/>
+      <stop offset=".32" stop-color="#fff08b"/>
+      <stop offset="1" stop-color="#ffc62d"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M76 340h88v-72h60" fill="none" stroke="#59e8ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="76" cy="340" r="18" fill="#59e8ff"/>
+  <circle cx="224" cy="268" r="18" fill="#59e8ff"/>
+  <path d="M436 340h-88v-72h-60" fill="none" stroke="#59e8ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="436" cy="340" r="18" fill="#59e8ff"/>
+  <circle cx="288" cy="268" r="18" fill="#59e8ff"/>
+  <circle cx="256" cy="196" r="92" fill="url(#bulb)" stroke="#fff3a3" stroke-width="14"/>
+  <path d="M224 284h64v48c0 18-14 32-32 32s-32-14-32-32z" fill="#8f722d"/>
+  <path d="M230 310h52M232 329h48" stroke="#d8b94e" stroke-width="10" stroke-linecap="round"/>
+  <path d="M256 92V54M170 119l-28-28M342 119l28-28M139 202h-40M373 202h40" stroke="#ffd64c" stroke-width="16" stroke-linecap="round"/>
+  <path d="M238 177l20-34 16 29 20-7-34 54-17-31-21 8z" fill="#6a4a00" opacity=".55"/>
+</svg>
