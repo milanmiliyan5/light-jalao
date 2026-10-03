@@ -482,11 +482,24 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
+        if (webView == null) {
+            performSystemBack();
+            return;
         }
+
+        webView.evaluateJavascript(
+            "window.handleNativeBack ? window.handleNativeBack() : false",
+            result -> {
+                boolean handledByGame = "true".equals(result);
+                if (!handledByGame) {
+                    performSystemBack();
+                }
+            }
+        );
+    }
+
+    private void performSystemBack() {
+        super.onBackPressed();
     }
 
     @Override
