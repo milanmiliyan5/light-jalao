@@ -2653,3 +2653,271 @@ body.app-installed .install-app-btn {
     padding-bottom: max(18px, env(safe-area-inset-bottom));
   }
 }
+
+
+/* ---------- Mobile game full-screen layout ---------- */
+@media (max-width: 700px), (pointer: coarse) {
+  html,
+  body {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .home-screen {
+    min-height: 100dvh;
+    padding:
+      max(14px, env(safe-area-inset-top))
+      10px
+      max(16px, env(safe-area-inset-bottom));
+    align-items: start;
+    justify-items: stretch;
+  }
+
+  .home-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 8px 0 16px;
+  }
+
+  .home-logo {
+    width: 154px;
+    height: 116px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+
+  .home-bulb {
+    left: 51px;
+  }
+
+  .home-content > h1 {
+    font-size: clamp(42px, 12vw, 58px);
+  }
+
+  .home-subtitle {
+    max-width: 92%;
+    margin-top: 10px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .home-progress-card {
+    width: 100%;
+    padding: 16px 14px 14px;
+    border-radius: 19px;
+  }
+
+  .home-progress-top strong {
+    font-size: 16px;
+  }
+
+  .home-progress-top b {
+    font-size: 12px;
+  }
+
+  .home-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .home-summary div {
+    min-width: 0;
+    padding: 9px 2px;
+  }
+
+  .home-summary strong {
+    font-size: 16px;
+  }
+
+  .home-summary small {
+    font-size: 8px;
+  }
+
+  .home-play-btn {
+    min-height: 70px;
+    margin-top: 12px;
+    border-radius: 18px;
+  }
+
+  .home-play-btn strong {
+    font-size: 18px;
+  }
+
+  .home-secondary-actions,
+  .home-special-modes,
+  .home-extra-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .home-secondary-actions button {
+    min-height: 52px;
+    font-size: 13px;
+  }
+
+  .special-mode-card {
+    min-height: 72px;
+    padding: 10px;
+  }
+
+  .special-mode-copy strong {
+    font-size: 13px;
+  }
+
+  .special-mode-copy em {
+    font-size: 9px;
+  }
+
+  .home-extra-actions button {
+    min-height: 60px;
+  }
+
+  .home-extra-actions strong {
+    font-size: 11px;
+  }
+
+  .home-extra-actions small {
+    font-size: 8px;
+  }
+
+  .install-app-btn {
+    min-height: 64px;
+  }
+
+  .home-footer {
+    margin-top: 12px;
+    font-size: 9px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      8px
+      max(14px, env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    grid-template-columns: 46px 1fr 46px;
+    padding: 5px 3px 11px;
+  }
+
+  .brand h1 {
+    font-size: clamp(22px, 6.5vw, 29px);
+  }
+
+  .brand p {
+    font-size: 8px;
+  }
+
+  .game-shell {
+    width: 100%;
+    padding: 16px 10px 15px;
+    border-radius: 22px;
+  }
+
+  .level-head strong {
+    font-size: 21px;
+  }
+
+  .challenge-row {
+    margin-bottom: 11px;
+  }
+
+  .mission-strip {
+    margin-bottom: 10px;
+    padding: 10px;
+  }
+
+  .board-frame {
+    width: 100%;
+    max-width: none;
+    padding: 2px;
+  }
+
+  .board {
+    width: 100%;
+    max-width: none;
+    gap: clamp(5px, 1.5vw, 8px);
+  }
+
+  .tile {
+    border-radius: clamp(9px, 2.4vw, 15px);
+  }
+
+  .status-text {
+    min-height: 34px;
+    margin: 11px auto 9px;
+    font-size: 12px;
+  }
+
+  .stats {
+    margin-bottom: 9px;
+  }
+
+  .stat {
+    padding: 9px 4px;
+  }
+
+  .actions {
+    gap: 8px;
+  }
+
+  .ghost-btn,
+  .hint-btn {
+    min-height: 52px;
+  }
+
+  .modal {
+    width: calc(100vw - 22px);
+    max-width: 520px;
+  }
+}
+
+@media (display-mode: standalone) and (pointer: coarse) {
+  .home-screen {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .home-content {
+    width: 100%;
+    max-width: none;
+  }
+
+  .app {
+    width: 100%;
+    max-width: none;
+  }
+
+  .game-shell,
+  .board-frame {
+    max-width: none;
+  }
+}
+
+/* Very tall phones: use the extra space instead of leaving a huge empty area. */
+@media (min-height: 850px) and (max-width: 700px),
+       (min-height: 850px) and (pointer: coarse) {
+  .home-content {
+    padding-top: clamp(18px, 4vh, 42px);
+  }
+
+  .home-logo {
+    transform: scale(1.06);
+    transform-origin: 50% 100%;
+    margin-bottom: 8px;
+  }
+
+  .home-subtitle {
+    margin-bottom: 20px;
+  }
+}
