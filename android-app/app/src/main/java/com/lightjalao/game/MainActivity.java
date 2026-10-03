@@ -8,9 +8,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.JavascriptInterface;
@@ -49,6 +51,7 @@ public class MainActivity extends Activity {
     private AdView bannerAd;
     private volatile RewardedAd rewardedAd;
     private boolean pageReady = false;
+    private float targetRefreshRate = 60f;
 
     @Override
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
@@ -58,6 +61,7 @@ public class MainActivity extends Activity {
         Window window = getWindow();
         window.setStatusBarColor(Color.rgb(18, 53, 74));
         window.setNavigationBarColor(Color.rgb(8, 28, 40));
+        configureHighRefreshRate();
 
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.rgb(14, 43, 60));
@@ -69,6 +73,7 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(14, 43, 60));
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setAlpha(0.01f);
 
         WebSettings settings = webView.getSettings();
@@ -336,6 +341,11 @@ public class MainActivity extends Activity {
 
     private class NativeBridge {
         @JavascriptInterface
+        public float getTargetRefreshRate() {
+            return targetRefreshRate;
+        }
+
+        @JavascriptInterface
         public void vibrate(String pattern) {
             if (pattern == null || pattern.trim().isEmpty()) return;
 
@@ -380,6 +390,47 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void configureHighRefreshRate() {
+        try {
+            Display display = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                ? getDisplay()
+                : getWindowManager().getDefaultDisplay();
+
+            if (display == null) return;
+
+            float highestRate = display.getRefreshRate();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Display.Mode currentMode = display.getMode();
+                Display.Mode bestMode = currentMode;
+
+                for (Display.Mode mode : display.getSupportedModes()) {
+                    boolean sameResolution =
+                        mode.getPhysicalWidth() == currentMode.getPhysicalWidth()
+                            && mode.getPhysicalHeight() == currentMode.getPhysicalHeight();
+
+                    if (sameResolution && mode.getRefreshRate() > bestMode.getRefreshRate()) {
+                        bestMode = mode;
+                    }
+                }
+
+                WindowManager.LayoutParams params = getWindow().getAttributes();
+                params.preferredDisplayModeId = bestMode.getModeId();
+                params.preferredRefreshRate = bestMode.getRefreshRate();
+                getWindow().setAttributes(params);
+                highestRate = bestMode.getRefreshRate();
+            } else {
+                WindowManager.LayoutParams params = getWindow().getAttributes();
+                params.preferredRefreshRate = highestRate;
+                getWindow().setAttributes(params);
+            }
+
+            targetRefreshRate = highestRate;
+        } catch (Throwable ignored) {
+            targetRefreshRate = 60f;
+        }
+    }
+
     private void enterImmersiveMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController controller = getWindow().getInsetsController();
@@ -412,6 +463,7 @@ public class MainActivity extends Activity {
         super.onResume();
         if (webView != null) webView.onResume();
         if (bannerAd != null) bannerAd.resume();
+        configureHighRefreshRate();
         enterImmersiveMode();
     }
 
