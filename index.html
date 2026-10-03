@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b14" />
+  <meta name="description" content="Light Jalao - a glowing brain puzzle game." />
+  <title>Light Jalao 💡</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <button class="icon-button" id="helpButton" aria-label="How to play">?</button>
+      <div class="brand">
+        <span class="brand-bulb" aria-hidden="true">💡</span>
+        <div>
+          <h1>Light Jalao</h1>
+          <p>Switch on every light</p>
+        </div>
+      </div>
+      <button class="icon-button sound-on" id="soundButton" aria-label="Toggle sound">♪</button>
+    </header>
+
+    <section class="game-card">
+      <div class="level-row">
+        <div>
+          <span class="eyebrow">CURRENT LEVEL</span>
+          <strong id="levelLabel">Level 1</strong>
+        </div>
+        <button class="level-picker-button" id="levelPickerButton">Levels <span>⌄</span></button>
+      </div>
+
+      <div class="progress-track" aria-label="Level progress">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="stats" aria-label="Game statistics">
+        <div class="stat">
+          <span>Moves</span>
+          <strong id="movesValue">0</strong>
+        </div>
+        <div class="stat">
+          <span>Best</span>
+          <strong id="bestValue">—</strong>
+        </div>
+        <div class="stat">
+          <span>Time</span>
+          <strong id="timeValue">00:00</strong>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board-glow"></div>
+        <div class="board" id="board" role="grid" aria-label="Light puzzle board"></div>
+      </div>
+
+      <p class="tip" id="tipText">
+        Tap a light to change it and the lights next to it.
+      </p>
+
+      <div class="actions">
+        <button class="secondary-button" id="restartButton">
+          <span aria-hidden="true">↻</span> Restart
+        </button>
+        <button class="primary-button" id="hintButton">
+          <span aria-hidden="true">✦</span> Hint
+        </button>
+      </div>
+    </section>
+
+    <p class="footer-copy">Think smart. Glow brighter. ✨</p>
+  </main>
+
+  <div class="modal-backdrop hidden" id="helpModal" aria-hidden="true">
+    <section class="modal">
+      <button class="modal-close" data-close-modal="helpModal" aria-label="Close">×</button>
+      <div class="modal-icon">💡</div>
+      <h2>How to play</h2>
+      <p>Turn <strong>every light ON</strong>. When you tap a light, that light and its up, down, left and right neighbours change state.</p>
+      <div class="rule-demo" aria-hidden="true">
+        <span></span><span class="active"></span><span></span>
+        <span class="active"></span><span class="center">💡</span><span class="active"></span>
+        <span></span><span class="active"></span><span></span>
+      </div>
+      <button class="primary-button full-button" data-close-modal="helpModal">Got it!</button>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="winModal" aria-hidden="true">
+    <section class="modal win-modal">
+      <div class="celebration" id="celebration"></div>
+      <div class="modal-icon trophy">🏆</div>
+      <span class="eyebrow">LEVEL COMPLETE</span>
+      <h2 id="winTitle">Brilliant!</h2>
+      <p id="winStats">You lit every bulb.</p>
+      <button class="primary-button full-button" id="nextLevelButton">Next Level →</button>
+      <button class="text-button" id="replayButton">Replay this level</button>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="levelsModal" aria-hidden="true">
+    <section class="modal levels-modal">
+      <button class="modal-close" data-close-modal="levelsModal" aria-label="Close">×</button>
+      <span class="eyebrow">CHOOSE A LEVEL</span>
+      <h2>Your journey</h2>
+      <div class="levels-grid" id="levelsGrid"></div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
