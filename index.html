@@ -18,127 +18,113 @@
   <link rel="icon" href="icons/light-jalao-icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/light-jalao-icon.svg" />
   <title>Light Jalao 💡</title>
-  <link rel="stylesheet" href="style.css?v=20261003-player-profile-v1" />
+  <link rel="stylesheet" href="style.css?v=20261003-lobby-v2" />
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
   <div class="bg-orb bg-orb-two"></div>
 
-  <section class="home-screen arcade-home" id="homeScreen" aria-label="Light Jalao home">
+  <section class="home-screen arcade-home lobby-v2" id="homeScreen" aria-label="Light Jalao home">
     <div class="arcade-scanlines" aria-hidden="true"></div>
     <div class="arcade-glow glow-one" aria-hidden="true"></div>
     <div class="arcade-glow glow-two" aria-hidden="true"></div>
 
-    <div class="home-content arcade-home-content">
-      <div class="arcade-topbar">
-        <button class="player-chip" id="profileBtn" type="button" aria-label="Player profile">
+    <div class="home-content arcade-home-content lobby-content">
+      <div class="lobby-topbar">
+        <button class="player-chip lobby-player-chip" id="profileBtn" type="button" aria-label="Player profile">
           <span class="player-chip-avatar" id="homeProfileAvatar">😎</span>
           <span class="player-chip-copy">
             <small>PLAYER</small>
             <strong id="homeProfileName">Player</strong>
           </span>
         </button>
-        <div class="arcade-titleplate">
-          <span>⚡</span>
-          <strong>LIGHT JALAO</strong>
-          <small>ARCADE MODE</small>
-        </div>
+
+        <span class="lobby-online-pill"><i></i> OFFLINE READY</span>
+
         <button class="home-settings-btn arcade-settings-btn" id="settingsBtn" type="button" aria-label="Game settings">⚙</button>
       </div>
-      <div class="arcade-online-note"><i></i><span>OFFLINE PROFILE • BATTLE READY</span></div>
 
-      <section class="arcade-hero">
-        <div class="arcade-logo" aria-hidden="true">
-          <span class="arcade-ring ring-a"></span>
-          <span class="arcade-ring ring-b"></span>
-          <span class="arcade-bulb"><i></i><b></b></span>
-          <span class="arcade-spark s1"></span>
-          <span class="arcade-spark s2"></span>
-          <span class="arcade-spark s3"></span>
+      <section class="lobby-hero">
+        <div class="lobby-bulb" aria-hidden="true">
+          <span class="lobby-ring ring-one"></span>
+          <span class="lobby-ring ring-two"></span>
+          <i></i><b></b>
         </div>
-        <div class="arcade-brand-copy">
-          <span class="arcade-eyebrow">CONNECT • POWER • GLOW</span>
+        <div class="lobby-brand">
+          <small>CONNECT • POWER • GLOW</small>
           <h1>Light <em>Jalao</em></h1>
-          <p>Complete the circuit. Light every bulb. Beat every world.</p>
+          <p>Complete circuits. Unlock worlds. Rule the grid.</p>
         </div>
       </section>
 
-      <section class="arcade-stage-card">
-        <div class="stage-grid" aria-hidden="true"></div>
-        <div class="stage-top">
+      <section class="world-stage-card">
+        <div class="world-stage-bg" aria-hidden="true">
+          <i class="world-line l1"></i><i class="world-line l2"></i><i class="world-line l3"></i>
+          <span class="world-node n1"></span><span class="world-node n2"></span><span class="world-node n3"></span>
+        </div>
+
+        <div class="world-stage-head">
           <div>
-            <small>CURRENT STAGE</small>
+            <small>YOUR JOURNEY</small>
             <strong id="homeWorld">Spark Lab</strong>
             <span id="homeLevel">Level 1 / 500</span>
           </div>
-          <div class="stage-badge">
-            <small>POWER</small>
-            <b>⚡</b>
-          </div>
+          <div class="world-stage-emblem"><span>⚡</span><small>WORLD</small></div>
         </div>
 
-        <div class="arcade-progress-track">
+        <div class="arcade-progress-track world-stage-progress">
           <div class="home-progress-fill" id="homeProgressFill"></div>
         </div>
 
-        <button class="arcade-play-btn home-play-btn" id="continueBtn">
-          <span class="arcade-play-icon">▶</span>
-          <span>
-            <small>CONTINUE RUN</small>
-            <strong id="continueLabel">Start Level 1</strong>
-          </span>
-          <b>GO</b>
+        <button class="lobby-play-btn" id="continueBtn">
+          <span class="lobby-play-symbol">▶</span>
+          <span><small>CONTINUE</small><strong id="continueLabel">Start Level 1</strong></span>
+          <b>PLAY</b>
         </button>
       </section>
 
-      <div class="arcade-section-label"><span>SELECT MODE</span><i></i></div>
+      <div class="lobby-section-title"><span>PLAY MODES</span><i></i></div>
 
-      <div class="arcade-mode-grid home-special-modes">
-        <button class="arcade-mode-card arcade-daily daily-mode-card" id="dailyBtn">
-          <span class="arcade-mode-symbol">☀</span>
-          <span class="arcade-mode-text">
-            <small>DAILY DROP</small>
-            <strong>Daily Challenge</strong>
-            <em id="dailyStatus">New puzzle today</em>
-          </span>
-          <b>PLAY</b>
+      <div class="lobby-modes">
+        <button class="lobby-mode-card daily-mode-card" id="dailyBtn">
+          <span class="lobby-mode-icon">☀</span>
+          <span><small>DAILY DROP</small><strong>Daily Challenge</strong><em id="dailyStatus">New puzzle today</em></span>
+          <b>›</b>
         </button>
 
-        <button class="arcade-mode-card arcade-endless endless-mode-card" id="endlessBtn">
-          <span class="arcade-mode-symbol">∞</span>
-          <span class="arcade-mode-text">
-            <small>INFINITE RUN</small>
-            <strong>Endless Mode</strong>
-            <em id="endlessStatus">Best run: 0</em>
+        <button class="lobby-mode-card endless-mode-card" id="endlessBtn">
+          <span class="lobby-mode-icon">∞</span>
+          <span><small>INFINITE RUN</small><strong>Endless Mode</strong><em id="endlessStatus">Best run: 0</em></span>
+          <b>›</b>
+        </button>
+
+        <button class="battle-arena-card" id="battleBtn" type="button">
+          <span class="battle-icon">⚔</span>
+          <span>
+            <small>ONLINE MODE</small>
+            <strong>Battle Arena</strong>
+            <em>Coming Soon • Player vs Player</em>
           </span>
-          <b>PLAY</b>
+          <b>SOON</b>
         </button>
       </div>
 
-      <div class="arcade-shortcuts home-game-menu">
-        <button id="homeLevelsBtn">
-          <span class="shortcut-icon">▦</span>
-          <strong>Levels</strong>
-          <small>500</small>
-        </button>
-        <button id="journeyBtn">
-          <span class="shortcut-icon">🌍</span>
-          <strong>Worlds</strong>
-          <small id="journeySummary">0 / 13</small>
-        </button>
-        <button id="achievementsBtn">
-          <span class="shortcut-icon">🏆</span>
-          <strong>Trophies</strong>
-          <small id="achievementCount">0 / 12</small>
-        </button>
-        <button id="homeHelpBtn">
-          <span class="shortcut-icon">?</span>
-          <strong>Guide</strong>
-          <small>HOW TO</small>
-        </button>
+      <button class="daily-reward-strip" id="rewardStripBtn" type="button">
+        <span class="reward-gift">🎁</span>
+        <span>
+          <small>DAILY REWARD</small>
+          <strong id="homeRewardText">Keep your streak alive</strong>
+        </span>
+        <span class="reward-streak"><b>🔥</b><strong id="rewardStreakValue">0</strong><small>DAY</small></span>
+      </button>
+
+      <div class="lobby-mini-menu">
+        <button id="journeyBtn"><span>🌍</span><strong>Worlds</strong><small id="journeySummary">0 / 13</small></button>
+        <button id="achievementsBtn"><span>🏆</span><strong>Trophies</strong><small id="achievementCount">0 / 12</small></button>
+        <button id="homeHelpBtn"><span>?</span><strong>Guide</strong><small>HOW TO</small></button>
       </div>
 
-      <div class="arcade-player-strip player-power-strip">
+      <div class="lobby-stats player-power-strip">
         <span><b>⭐</b><strong id="homeStars">0</strong><small>STARS</small></span>
         <i></i>
         <span><b>🔥</b><strong id="homeStreak">0</strong><small>STREAK</small></span>
@@ -151,9 +137,15 @@
         <span><small>INSTALL</small><strong>Light Jalao App</strong></span>
         <b>→</b>
       </button>
-
-      <p class="home-footer arcade-footer">500 LEVELS • 13 WORLDS • DAILY • ENDLESS</p>
     </div>
+
+    <nav class="game-bottom-nav" aria-label="Game navigation">
+      <button class="active" id="bottomHomeBtn" type="button"><span>⌂</span><small>Home</small></button>
+      <button id="homeLevelsBtn" type="button"><span>▦</span><small>Levels</small></button>
+      <button id="bottomBattleBtn" type="button"><span>⚔</span><small>Battle</small></button>
+      <button id="bottomRewardsBtn" type="button"><span>🎁</span><small>Rewards</small></button>
+      <button id="bottomProfileBtn" type="button"><span id="bottomProfileAvatar">😎</span><small>Profile</small></button>
+    </nav>
   </section>
 
   <main class="app">
@@ -316,6 +308,47 @@
     </section>
   </div>
 
+  <div class="modal-backdrop hidden" id="battleModal" aria-hidden="true">
+    <section class="modal battle-modal">
+      <button class="modal-close" data-close="battleModal" aria-label="Close">×</button>
+      <div class="battle-modal-icon">⚔</div>
+      <span class="mini-label">ONLINE BATTLE</span>
+      <h2>Battle Arena</h2>
+      <p>Player vs Player mode is being prepared. Your username, emoji avatar and Player ID are already battle-ready.</p>
+      <div class="battle-preview">
+        <div><span id="battleProfileAvatar">😎</span><strong id="battleProfileName">Player</strong><small>YOU</small></div>
+        <b>VS</b>
+        <div><span>👾</span><strong>Opponent</strong><small>COMING SOON</small></div>
+      </div>
+      <button class="primary-btn" data-close="battleModal">Got it</button>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="rewardsModal" aria-hidden="true">
+    <section class="modal rewards-modal">
+      <button class="modal-close" data-close="rewardsModal" aria-label="Close">×</button>
+      <div class="reward-modal-icon">🎁</div>
+      <span class="mini-label">PLAYER REWARDS</span>
+      <h2>Daily Power Rewards</h2>
+      <p>Keep playing Daily Challenge to build your streak. Reward cosmetics can plug into this system later.</p>
+      <div class="reward-summary-grid">
+        <div><span>🔥</span><strong id="rewardModalStreak">0</strong><small>Current streak</small></div>
+        <div><span>⭐</span><strong id="rewardModalStars">0</strong><small>Total stars</small></div>
+        <div><span>🏆</span><strong id="rewardModalAchievements">0</strong><small>Trophies</small></div>
+      </div>
+      <div class="future-reward-track">
+        <span class="reward-day active">1</span>
+        <span class="reward-day">2</span>
+        <span class="reward-day">3</span>
+        <span class="reward-day special">🎁</span>
+        <span class="reward-day">5</span>
+        <span class="reward-day">6</span>
+        <span class="reward-day special">🏆</span>
+      </div>
+      <small class="future-reward-note">Reward claiming will be enabled with the future online rewards system.</small>
+    </section>
+  </div>
+
   <div class="modal-backdrop hidden" id="profileModal" aria-hidden="true">
     <section class="modal player-profile-modal">
       <button class="modal-close" data-close="profileModal" aria-label="Close">×</button>
@@ -418,6 +451,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=20261003-player-profile-v1"></script>
+  <script src="script.js?v=20261003-lobby-v2"></script>
 </body>
 </html>
