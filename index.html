@@ -3,110 +3,133 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#070b14" />
-  <meta name="description" content="Light Jalao - a glowing brain puzzle game." />
+  <meta name="theme-color" content="#071018" />
+  <meta name="description" content="Light Jalao - connect the wires and light every bulb." />
   <title>Light Jalao 💡</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
+  <div class="bg-orb bg-orb-one"></div>
+  <div class="bg-orb bg-orb-two"></div>
 
-  <main class="app-shell">
+  <main class="app">
     <header class="topbar">
-      <button class="icon-button" id="helpButton" aria-label="How to play">?</button>
+      <button class="round-btn" id="helpBtn" aria-label="How to play">?</button>
+
       <div class="brand">
-        <span class="brand-bulb" aria-hidden="true">💡</span>
+        <span class="brand-mark" aria-hidden="true">
+          <span class="brand-ray"></span>
+          <span class="brand-bulb"></span>
+        </span>
         <div>
           <h1>Light Jalao</h1>
-          <p>Switch on every light</p>
+          <p>CONNECT • POWER • GLOW</p>
         </div>
       </div>
-      <button class="icon-button sound-on" id="soundButton" aria-label="Toggle sound">♪</button>
+
+      <button class="round-btn sound-on" id="soundBtn" aria-label="Toggle sound">♪</button>
     </header>
 
-    <section class="game-card">
-      <div class="level-row">
+    <section class="game-shell">
+      <div class="level-head">
         <div>
-          <span class="eyebrow">CURRENT LEVEL</span>
-          <strong id="levelLabel">Level 1</strong>
+          <span class="mini-label">PUZZLE</span>
+          <strong id="levelText">Level 1</strong>
         </div>
-        <button class="level-picker-button" id="levelPickerButton">Levels <span>⌄</span></button>
+        <button class="level-btn" id="levelsBtn">Levels <span>⌄</span></button>
       </div>
 
-      <div class="progress-track" aria-label="Level progress">
-        <div class="progress-fill" id="progressFill"></div>
+      <div class="level-progress" aria-label="Game progress">
+        <div class="level-progress-fill" id="levelProgressFill"></div>
       </div>
 
-      <div class="stats" aria-label="Game statistics">
+      <div class="mission-strip">
+        <div class="mission-device battery-mini" aria-hidden="true">⚡</div>
+        <div class="mission-wire"><span></span></div>
+        <div class="mission-copy">
+          <span>POWER THE CIRCUIT</span>
+          <strong id="powerText">0 / 0 bulbs</strong>
+        </div>
+        <div class="mission-device bulb-mini" id="missionBulb" aria-hidden="true">
+          <i></i><b></b>
+        </div>
+      </div>
+
+      <div class="board-frame">
+        <div class="board-halo"></div>
+        <div class="board" id="board" role="grid" aria-label="Wire connection puzzle"></div>
+      </div>
+
+      <p class="status-text" id="statusText">
+        Tap a tile to rotate the wire. Connect the power source to every bulb.
+      </p>
+
+      <div class="stats">
         <div class="stat">
           <span>Moves</span>
-          <strong id="movesValue">0</strong>
+          <strong id="movesText">0</strong>
         </div>
         <div class="stat">
           <span>Best</span>
-          <strong id="bestValue">—</strong>
+          <strong id="bestText">—</strong>
         </div>
         <div class="stat">
           <span>Time</span>
-          <strong id="timeValue">00:00</strong>
+          <strong id="timeText">00:00</strong>
         </div>
       </div>
 
-      <div class="board-wrap">
-        <div class="board-glow"></div>
-        <div class="board" id="board" role="grid" aria-label="Light puzzle board"></div>
-      </div>
-
-      <p class="tip" id="tipText">
-        Tap a light to change it and the lights next to it.
-      </p>
-
       <div class="actions">
-        <button class="secondary-button" id="restartButton">
-          <span aria-hidden="true">↻</span> Restart
-        </button>
-        <button class="primary-button" id="hintButton">
-          <span aria-hidden="true">✦</span> Hint
-        </button>
+        <button class="ghost-btn" id="restartBtn"><span>↻</span> Restart</button>
+        <button class="hint-btn" id="hintBtn"><span>✦</span> Hint</button>
       </div>
     </section>
 
-    <p class="footer-copy">Think smart. Glow brighter. ✨</p>
+    <p class="footer-text">Complete the circuit. Light up the dark. ✨</p>
   </main>
 
   <div class="modal-backdrop hidden" id="helpModal" aria-hidden="true">
     <section class="modal">
-      <button class="modal-close" data-close-modal="helpModal" aria-label="Close">×</button>
-      <div class="modal-icon">💡</div>
-      <h2>How to play</h2>
-      <p>Turn <strong>every light ON</strong>. When you tap a light, that light and its up, down, left and right neighbours change state.</p>
-      <div class="rule-demo" aria-hidden="true">
-        <span></span><span class="active"></span><span></span>
-        <span class="active"></span><span class="center">💡</span><span class="active"></span>
-        <span></span><span class="active"></span><span></span>
+      <button class="modal-close" data-close="helpModal" aria-label="Close">×</button>
+      <div class="help-demo">
+        <span class="demo-battery">⚡</span>
+        <span class="demo-wire powered"></span>
+        <span class="demo-corner">⌜</span>
+        <span class="demo-wire"></span>
+        <span class="demo-bulb">💡</span>
       </div>
-      <button class="primary-button full-button" data-close-modal="helpModal">Got it!</button>
+      <span class="mini-label">HOW TO PLAY</span>
+      <h2>Connect the wires</h2>
+      <p>Tap any wire tile to rotate it. Make one complete circuit from the <strong>power source</strong> to <strong>every bulb</strong>. Connected wires glow when electricity reaches them.</p>
+      <div class="help-rules">
+        <div><span>1</span> Rotate the wire pieces</div>
+        <div><span>2</span> Match wire ends edge-to-edge</div>
+        <div><span>3</span> Light every bulb to win</div>
+      </div>
+      <button class="primary-btn" data-close="helpModal">Start Puzzle</button>
     </section>
   </div>
 
   <div class="modal-backdrop hidden" id="winModal" aria-hidden="true">
     <section class="modal win-modal">
-      <div class="celebration" id="celebration"></div>
-      <div class="modal-icon trophy">🏆</div>
-      <span class="eyebrow">LEVEL COMPLETE</span>
-      <h2 id="winTitle">Brilliant!</h2>
-      <p id="winStats">You lit every bulb.</p>
-      <button class="primary-button full-button" id="nextLevelButton">Next Level →</button>
-      <button class="text-button" id="replayButton">Replay this level</button>
+      <div class="confetti-wrap" id="confettiWrap"></div>
+      <div class="win-bulb">
+        <i></i><b></b>
+      </div>
+      <span class="mini-label">CIRCUIT COMPLETE</span>
+      <h2 id="winTitle">Lights on! ✨</h2>
+      <p id="winCopy">Every bulb is glowing.</p>
+      <button class="primary-btn" id="nextBtn">Next Level →</button>
+      <button class="text-btn" id="replayBtn">Replay this puzzle</button>
     </section>
   </div>
 
   <div class="modal-backdrop hidden" id="levelsModal" aria-hidden="true">
     <section class="modal levels-modal">
-      <button class="modal-close" data-close-modal="levelsModal" aria-label="Close">×</button>
-      <span class="eyebrow">CHOOSE A LEVEL</span>
-      <h2>Your journey</h2>
+      <button class="modal-close" data-close="levelsModal" aria-label="Close">×</button>
+      <span class="mini-label">PUZZLES</span>
+      <h2>Choose a level</h2>
+      <p>Complete a circuit to unlock the next puzzle.</p>
       <div class="levels-grid" id="levelsGrid"></div>
     </section>
   </div>
