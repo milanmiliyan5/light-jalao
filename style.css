@@ -3518,3 +3518,22 @@ body {
   .home-game-menu button { min-height:57px; }
   .player-power-strip { margin-top:7px; padding:6px; }
 }
+
+
+/* ---------- Native Android banner: zero layout shift ---------- */
+body.native-android .app {
+  padding-bottom: max(64px, env(safe-area-inset-bottom));
+}
+
+body.native-android .home-content {
+  padding-bottom: max(68px, env(safe-area-inset-bottom));
+}
+
+body.native-android .home-footer {
+  margin-bottom: 2px;
+}
+
+/* The reserved space is just game background, never a blank ad box. */
+body.native-android {
+  min-height: 100dvh;
+}
