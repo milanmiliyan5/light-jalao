@@ -288,6 +288,7 @@ const musicToggleBtn = document.getElementById("musicToggleBtn");
 const hapticToggleBtn = document.getElementById("hapticToggleBtn");
 const soundSettingState = document.getElementById("soundSettingState");
 const musicSettingState = document.getElementById("musicSettingState");
+const musicThemeGrid = document.getElementById("musicThemeGrid");
 const masterVolumeSlider = document.getElementById("masterVolumeSlider");
 const masterVolumeValue = document.getElementById("masterVolumeValue");
 const hapticSettingState = document.getElementById("hapticSettingState");
@@ -316,6 +317,7 @@ let timerStarted = false;
 let locked = false;
 let soundEnabled = true;
 let musicEnabled = true;
+let selectedMusicTheme = "neon";
 let hapticsEnabled = true;
 let masterVolumePercent = 120;
 let audioContext = null;
@@ -374,6 +376,9 @@ function normalizeProfileName(value) {
 const progress = loadProgress();
 soundEnabled = progress.settings?.sound !== false;
 musicEnabled = progress.settings?.music !== false;
+selectedMusicTheme = ["neon","chill","retro","voltage"].includes(progress.settings?.musicTheme)
+  ? progress.settings.musicTheme
+  : "neon";
 masterVolumePercent = Math.max(40, Math.min(150, Number(progress.settings?.volume) || 120));
 hapticsEnabled = progress.settings?.haptics !== false;
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
@@ -394,7 +399,7 @@ function loadProgress() {
       achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {},
       settings: raw.settings && typeof raw.settings === "object"
         ? raw.settings
-        : { sound: true, music: true, volume: 120, haptics: true },
+        : { sound: true, music: true, musicTheme: "neon", volume: 120, haptics: true },
       hints: raw.hints && typeof raw.hints === "object"
         ? raw.hints
         : { count: 5, lastRefillAt: Date.now() },
@@ -415,7 +420,7 @@ function loadProgress() {
       daily: {},
       endlessBest: 0,
       achievements: {},
-      settings: { sound: true, music: true, volume: 120, haptics: true },
+      settings: { sound: true, music: true, musicTheme: "neon", volume: 120, haptics: true },
       hints: { count: 5, lastRefillAt: Date.now() },
       profile: defaultProfile()
     };
@@ -2089,39 +2094,129 @@ function playMusicTone(freq, duration = .32, volume = .005, delay = 0, type = "s
   oscillator.stop(start + duration + .05);
 }
 
+const MUSIC_THEMES = {
+  neon: {
+    interval: 1500,
+    leadType: "triangle",
+    bassType: "sine",
+    volume: 1.0,
+    home: [
+      [329.63, 392.00, 493.88, 659.25],
+      [293.66, 369.99, 440.00, 587.33],
+      [329.63, 415.30, 493.88, 659.25],
+      [261.63, 329.63, 392.00, 523.25]
+    ],
+    game: [
+      [293.66, 349.23, 440.00, 523.25],
+      [261.63, 329.63, 392.00, 493.88],
+      [311.13, 369.99, 466.16, 554.37],
+      [246.94, 293.66, 369.99, 440.00]
+    ]
+  },
+  chill: {
+    interval: 2300,
+    leadType: "sine",
+    bassType: "triangle",
+    volume: .78,
+    home: [
+      [261.63, 329.63, 392.00, 329.63],
+      [246.94, 293.66, 369.99, 293.66],
+      [220.00, 261.63, 329.63, 392.00],
+      [233.08, 293.66, 349.23, 293.66]
+    ],
+    game: [
+      [220.00, 277.18, 329.63, 277.18],
+      [196.00, 246.94, 293.66, 246.94],
+      [207.65, 261.63, 311.13, 261.63],
+      [185.00, 233.08, 277.18, 233.08]
+    ]
+  },
+  retro: {
+    interval: 1350,
+    leadType: "square",
+    bassType: "triangle",
+    volume: .72,
+    home: [
+      [523.25, 659.25, 783.99, 659.25],
+      [587.33, 698.46, 880.00, 698.46],
+      [493.88, 659.25, 783.99, 987.77],
+      [440.00, 587.33, 698.46, 587.33]
+    ],
+    game: [
+      [440.00, 523.25, 659.25, 783.99],
+      [392.00, 493.88, 587.33, 698.46],
+      [466.16, 587.33, 698.46, 880.00],
+      [392.00, 523.25, 659.25, 523.25]
+    ]
+  },
+  voltage: {
+    interval: 1120,
+    leadType: "sawtooth",
+    bassType: "square",
+    volume: .68,
+    home: [
+      [293.66, 440.00, 587.33, 880.00],
+      [329.63, 493.88, 659.25, 987.77],
+      [261.63, 392.00, 523.25, 783.99],
+      [311.13, 466.16, 622.25, 932.33]
+    ],
+    game: [
+      [329.63, 493.88, 659.25, 987.77],
+      [293.66, 440.00, 587.33, 880.00],
+      [349.23, 523.25, 698.46, 1046.50],
+      [261.63, 392.00, 523.25, 783.99]
+    ]
+  }
+};
+
 function scheduleMusicBar() {
   if (!musicEnabled || document.hidden) return;
 
+  const theme = MUSIC_THEMES[selectedMusicTheme] || MUSIC_THEMES.neon;
   const onHome = homeScreen && !homeScreen.classList.contains("hidden");
-  const homeBars = [
-    [261.63, 329.63, 392.00, 329.63],
-    [293.66, 369.99, 440.00, 369.99],
-    [246.94, 329.63, 392.00, 493.88],
-    [220.00, 293.66, 369.99, 293.66]
-  ];
-  const gameBars = [
-    [220.00, 261.63, 329.63, 392.00],
-    [196.00, 246.94, 293.66, 369.99],
-    [233.08, 293.66, 349.23, 440.00],
-    [196.00, 261.63, 329.63, 261.63]
-  ];
-
-  const bars = onHome ? homeBars : gameBars;
+  const bars = onHome ? theme.home : theme.game;
   const notes = bars[musicBarIndex % bars.length];
   musicBarIndex += 1;
 
+  const step = theme.interval / 1000 / 4;
   notes.forEach((freq, index) => {
-    playMusicTone(freq, .34, onHome ? .0042 : .0038, index * .42, index % 2 ? "triangle" : "sine");
+    playMusicTone(
+      freq,
+      Math.max(.18, step * .72),
+      .0052 * theme.volume,
+      index * step,
+      index % 2 ? theme.leadType : "sine"
+    );
   });
 
-  playMusicTone(notes[0] / 2, 1.55, .0026, 0, "sine");
+  playMusicTone(notes[0] / 2, Math.max(.8, (theme.interval / 1000) * .92), .0032 * theme.volume, 0, theme.bassType);
+}
+
+function restartBackgroundMusic() {
+  stopBackgroundMusic();
+  musicBarIndex = 0;
+  if (musicEnabled) startBackgroundMusic();
 }
 
 function startBackgroundMusic() {
   if (!musicEnabled || musicTimer || document.hidden) return;
   getAudioContext();
+  const theme = MUSIC_THEMES[selectedMusicTheme] || MUSIC_THEMES.neon;
   scheduleMusicBar();
-  musicTimer = window.setInterval(scheduleMusicBar, 1850);
+  musicTimer = window.setInterval(scheduleMusicBar, theme.interval);
+}
+
+function selectMusicTheme(themeKey) {
+  if (!MUSIC_THEMES[themeKey]) return;
+
+  selectedMusicTheme = themeKey;
+  progress.settings.musicTheme = selectedMusicTheme;
+  saveProgress();
+  syncSettingsUI();
+
+  if (musicEnabled) {
+    restartBackgroundMusic();
+  }
 }
 
 function stopBackgroundMusic() {
@@ -2232,6 +2327,12 @@ function syncSettingsUI() {
 
   if (musicSettingState) musicSettingState.textContent = musicEnabled ? "ON" : "OFF";
   musicToggleBtn?.classList.toggle("off", !musicEnabled);
+
+  musicThemeGrid?.querySelectorAll("[data-music-theme]").forEach(button => {
+    const active = button.dataset.musicTheme === selectedMusicTheme;
+    button.classList.toggle("selected", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
 
   if (masterVolumeSlider) masterVolumeSlider.value = String(masterVolumePercent);
   if (masterVolumeValue) masterVolumeValue.textContent = `${masterVolumePercent}%`;
@@ -2443,6 +2544,11 @@ profileNameInput?.addEventListener("keydown", event => {
 });
 soundToggleBtn?.addEventListener("click", () => setSoundEnabled(!soundEnabled));
 musicToggleBtn?.addEventListener("click", () => setMusicEnabled(!musicEnabled));
+musicThemeGrid?.addEventListener("click", event => {
+  const button = event.target.closest("[data-music-theme]");
+  if (!button) return;
+  selectMusicTheme(button.dataset.musicTheme);
+});
 masterVolumeSlider?.addEventListener("input", () => setMasterVolume(masterVolumeSlider.value, false));
 masterVolumeSlider?.addEventListener("change", () => {
   setMasterVolume(masterVolumeSlider.value, true);
@@ -2536,7 +2642,11 @@ document.addEventListener("click", event => {
   const button = event.target.closest("button");
   if (!button || button.disabled) return;
 
-  if (button.classList.contains("tile") || button.classList.contains("emoji-avatar-option")) return;
+  if (
+    button.classList.contains("tile") ||
+    button.classList.contains("emoji-avatar-option") ||
+    button.classList.contains("music-theme-card")
+  ) return;
   if (button.id === "hintBtn") return;
 
   let kind = "modal";
