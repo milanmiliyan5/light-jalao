@@ -12,9 +12,62 @@
   <div class="bg-orb bg-orb-one"></div>
   <div class="bg-orb bg-orb-two"></div>
 
+  <section class="home-screen" id="homeScreen" aria-label="Light Jalao home">
+    <div class="home-particles" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i>
+    </div>
+
+    <div class="home-content">
+      <div class="home-logo" aria-hidden="true">
+        <span class="home-bulb"><i></i><b></b></span>
+        <span class="home-circuit-line line-a"></span>
+        <span class="home-circuit-line line-b"></span>
+        <span class="home-node node-a"></span>
+        <span class="home-node node-b"></span>
+      </div>
+
+      <span class="home-kicker">CONNECT • POWER • GLOW</span>
+      <h1>Light Jalao</h1>
+      <p class="home-subtitle">Rotate the wires. Complete the circuit. Light every bulb.</p>
+
+      <div class="home-progress-card">
+        <div class="home-progress-top">
+          <div>
+            <span>CURRENT JOURNEY</span>
+            <strong id="homeWorld">Spark Lab</strong>
+          </div>
+          <b id="homeLevel">Level 1 / 100</b>
+        </div>
+
+        <div class="home-progress-track">
+          <div class="home-progress-fill" id="homeProgressFill"></div>
+        </div>
+
+        <div class="home-summary">
+          <div><span>⭐</span><strong id="homeStars">0</strong><small>Stars</small></div>
+          <div><span>✓</span><strong id="homeCompleted">0</strong><small>Cleared</small></div>
+          <div><span>⚡</span><strong>100</strong><small>Levels</small></div>
+        </div>
+      </div>
+
+      <button class="home-play-btn" id="continueBtn">
+        <span class="play-icon">▶</span>
+        <span><small>CONTINUE</small><strong id="continueLabel">Level 1</strong></span>
+        <b>→</b>
+      </button>
+
+      <div class="home-secondary-actions">
+        <button id="homeLevelsBtn"><span>▦</span> Levels</button>
+        <button id="homeHelpBtn"><span>?</span> How to Play</button>
+      </div>
+
+      <p class="home-footer">100 circuit puzzles • 5 evolving worlds</p>
+    </div>
+  </section>
+
   <main class="app">
     <header class="topbar">
-      <button class="round-btn" id="helpBtn" aria-label="How to play">?</button>
+      <button class="round-btn" id="homeBtn" aria-label="Back to home">⌂</button>
 
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">
@@ -36,7 +89,7 @@
           <span class="mini-label">PUZZLE</span>
           <strong id="levelText">Level 1</strong>
         </div>
-        <button class="level-btn" id="levelsBtn">Levels <span>⌄</span></button>
+        <div class="level-head-actions"><button class="mini-help-btn" id="helpBtn" aria-label="How to play">?</button><button class="level-btn" id="levelsBtn">Levels <span>⌄</span></button></div>
       </div>
 
       <div class="level-progress" aria-label="Game progress">
@@ -123,6 +176,8 @@
       </div>
       <span class="mini-label">CIRCUIT COMPLETE</span>
       <h2 id="winTitle">Lights on! ✨</h2>
+      <div class="win-stars" id="winStars" aria-label="Level rating"><span>☆</span><span>☆</span><span>☆</span></div>
+      <p class="win-rating" id="winRating">Circuit cleared</p>
       <p id="winCopy">Every bulb is glowing.</p>
       <button class="primary-btn" id="nextBtn">Next Level →</button>
       <button class="text-btn" id="replayBtn">Replay this puzzle</button>
