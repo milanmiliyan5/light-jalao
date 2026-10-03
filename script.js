@@ -267,6 +267,8 @@ const hintTimerText = document.getElementById("hintTimerText");
 const hintRechargeFill = document.getElementById("hintRechargeFill");
 const rewardAdBtn = document.getElementById("rewardAdBtn");
 const rewardAdStatus = document.getElementById("rewardAdStatus");
+const performanceDetail = document.getElementById("performanceDetail");
+const performanceState = document.getElementById("performanceState");
 
 let currentLevel = 0;
 let solvedMasks = [];
@@ -1680,7 +1682,10 @@ function showModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
   if (id === "hintRechargeModal") updateHintUI();
-  if (id === "settingsModal") syncSettingsUI();
+  if (id === "settingsModal") {
+    syncSettingsUI();
+    window.setTimeout(measureRenderFps, 80);
+  }
   el.classList.remove("hidden");
   el.setAttribute("aria-hidden", "false");
 }
@@ -1773,6 +1778,57 @@ function playWin() {
   playTone(660, .09, .026, .09, "triangle");
   playTone(820, .10, .028, .18, "sine");
   playTone(1040, .18, .03, .29, "sine");
+}
+
+let fpsMeasureToken = 0;
+
+function nativeTargetRefreshRate() {
+  try {
+    const value = Number(window.LightJalaoNative?.getTargetRefreshRate?.());
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function measureRenderFps() {
+  if (!performanceDetail || !performanceState) return;
+
+  const token = ++fpsMeasureToken;
+  const targetHz = nativeTargetRefreshRate();
+  const samples = [];
+  let last = performance.now();
+  const started = last;
+
+  performanceState.textContent = targetHz >= 119 ? "120Hz" : targetHz >= 89 ? "90Hz" : targetHz > 0 ? `${Math.round(targetHz)}Hz` : "AUTO";
+  performanceDetail.textContent = targetHz > 0
+    ? `Display target ${Math.round(targetHz)}Hz • measuring render FPS…`
+    : "Measuring render FPS…";
+
+  function frame(now) {
+    if (token !== fpsMeasureToken) return;
+
+    const delta = now - last;
+    last = now;
+    if (delta > 0 && delta < 100) samples.push(1000 / delta);
+
+    if (now - started < 1300) {
+      requestAnimationFrame(frame);
+      return;
+    }
+
+    const stable = samples.slice(Math.floor(samples.length * .12));
+    const avg = stable.length
+      ? stable.reduce((sum, value) => sum + value, 0) / stable.length
+      : 0;
+    const renderFps = Math.round(avg);
+
+    performanceDetail.textContent = targetHz > 0
+      ? `Display target ${Math.round(targetHz)}Hz • render ~${renderFps} FPS`
+      : `Render ~${renderFps} FPS • device controls refresh rate`;
+  }
+
+  requestAnimationFrame(frame);
 }
 
 function syncSettingsUI() {
