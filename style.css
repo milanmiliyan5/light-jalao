@@ -1853,3 +1853,109 @@ body::after {
     margin-top: 9px;
   }
 }
+
+
+/* ---------- Worlds 101–500 ---------- */
+body[data-world="arctic"] {
+  --world-rgb: 102, 218, 255;
+  --world-rgb-2: 146, 176, 255;
+  --world-bg-1: #071a26;
+  --world-bg-2: #06121a;
+  --world-accent: #7ee6ff;
+  --world-hot: #e8fbff;
+  --world-secondary: #9db6ff;
+}
+
+body[data-world="solar"] {
+  --world-rgb: 255, 145, 46;
+  --world-rgb-2: 255, 69, 34;
+  --world-bg-1: #261205;
+  --world-bg-2: #140a05;
+  --world-accent: #ff9a39;
+  --world-hot: #fff0b8;
+  --world-secondary: #ff5638;
+}
+
+body[data-world="cyber"] {
+  --world-rgb: 42, 255, 215;
+  --world-rgb-2: 42, 145, 255;
+  --world-bg-1: #061b1d;
+  --world-bg-2: #06101a;
+  --world-accent: #43f5d4;
+  --world-hot: #e0fff8;
+  --world-secondary: #4d9fff;
+}
+
+body[data-world="ocean"] {
+  --world-rgb: 49, 177, 255;
+  --world-rgb-2: 36, 238, 207;
+  --world-bg-1: #061c27;
+  --world-bg-2: #051117;
+  --world-accent: #43bfff;
+  --world-hot: #dff9ff;
+  --world-secondary: #32e7ca;
+}
+
+body[data-world="plasma"] {
+  --world-rgb: 255, 73, 185;
+  --world-rgb-2: 134, 82, 255;
+  --world-bg-1: #22091d;
+  --world-bg-2: #100914;
+  --world-accent: #ff64c4;
+  --world-hot: #ffe5f7;
+  --world-secondary: #9871ff;
+}
+
+body[data-world="retro"] {
+  --world-rgb: 255, 177, 59;
+  --world-rgb-2: 255, 91, 94;
+  --world-bg-1: #201308;
+  --world-bg-2: #120b08;
+  --world-accent: #ffbd53;
+  --world-hot: #fff1c6;
+  --world-secondary: #ff6a67;
+}
+
+body[data-world="void"] {
+  --world-rgb: 121, 108, 255;
+  --world-rgb-2: 68, 228, 255;
+  --world-bg-1: #0c0b1d;
+  --world-bg-2: #050811;
+  --world-accent: #8b80ff;
+  --world-hot: #eeeaff;
+  --world-secondary: #54dcff;
+}
+
+body[data-world="infinity"] {
+  --world-rgb: 255, 95, 225;
+  --world-rgb-2: 255, 206, 82;
+  --world-bg-1: #1d0a1f;
+  --world-bg-2: #0d080f;
+  --world-accent: #ff74e8;
+  --world-hot: #fff0fc;
+  --world-secondary: #ffd25a;
+}
+
+.level-world-heading[data-world="arctic"] span,
+.level-card[data-world="arctic"].current { --card-rgb: 102,218,255; }
+
+.level-world-heading[data-world="solar"] span,
+.level-card[data-world="solar"].current { --card-rgb: 255,145,46; }
+
+.level-world-heading[data-world="cyber"] span,
+.level-card[data-world="cyber"].current { --card-rgb: 42,255,215; }
+
+.level-world-heading[data-world="ocean"] span,
+.level-card[data-world="ocean"].current { --card-rgb: 49,177,255; }
+
+.level-world-heading[data-world="plasma"] span,
+.level-card[data-world="plasma"].current { --card-rgb: 255,73,185; }
+
+.level-world-heading[data-world="retro"] span,
+.level-card[data-world="retro"].current { --card-rgb: 255,177,59; }
+
+.level-world-heading[data-world="void"] span,
+.level-card[data-world="void"].current { --card-rgb: 121,108,255; }
+
+.level-world-heading[data-world="infinity"] span,
+.level-card[data-world="infinity"].current { --card-rgb: 255,95,225; }
