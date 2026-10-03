@@ -284,8 +284,10 @@ const profileEndless = document.getElementById("profileEndless");
 const profileError = document.getElementById("profileError");
 const saveProfileBtn = document.getElementById("saveProfileBtn");
 const soundToggleBtn = document.getElementById("soundToggleBtn");
+const musicToggleBtn = document.getElementById("musicToggleBtn");
 const hapticToggleBtn = document.getElementById("hapticToggleBtn");
 const soundSettingState = document.getElementById("soundSettingState");
+const musicSettingState = document.getElementById("musicSettingState");
 const hapticSettingState = document.getElementById("hapticSettingState");
 const hintEnergyText = document.getElementById("hintEnergyText");
 const hintMiniTimer = document.getElementById("hintMiniTimer");
@@ -311,8 +313,12 @@ let timer = null;
 let timerStarted = false;
 let locked = false;
 let soundEnabled = true;
+let musicEnabled = true;
 let hapticsEnabled = true;
 let audioContext = null;
+let musicTimer = null;
+let musicBarIndex = 0;
+const activeMusicNodes = new Set();
 let lastLitBulbs = 0;
 let hintUiTimer = null;
 let parMoves = 0;
@@ -360,6 +366,7 @@ function normalizeProfileName(value) {
 
 const progress = loadProgress();
 soundEnabled = progress.settings?.sound !== false;
+musicEnabled = progress.settings?.music !== false;
 hapticsEnabled = progress.settings?.haptics !== false;
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
 
@@ -379,7 +386,7 @@ function loadProgress() {
       achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {},
       settings: raw.settings && typeof raw.settings === "object"
         ? raw.settings
-        : { sound: true, haptics: true },
+        : { sound: true, music: true, haptics: true },
       hints: raw.hints && typeof raw.hints === "object"
         ? raw.hints
         : { count: 5, lastRefillAt: Date.now() },
@@ -400,7 +407,7 @@ function loadProgress() {
       daily: {},
       endlessBest: 0,
       achievements: {},
-      settings: { sound: true, haptics: true },
+      settings: { sound: true, music: true, haptics: true },
       hints: { count: 5, lastRefillAt: Date.now() },
       profile: defaultProfile()
     };
@@ -917,7 +924,7 @@ function renderProfileAvatarGrid() {
         option.classList.toggle("selected", selected);
         option.setAttribute("aria-selected", selected ? "true" : "false");
       });
-      playClick();
+      playGameSound("profile");
       vibrate(12);
     });
 
@@ -1344,7 +1351,7 @@ function rotateTile(index) {
   tile?.classList.remove("hint");
   tile?.removeAttribute("data-hint-turns");
   tile?.removeAttribute("data-hint-label");
-  playClick();
+  playGameSound("wire");
   vibrate(12);
 
   window.setTimeout(() => updatePower(true), 105);
@@ -1949,6 +1956,39 @@ function playGameSound(kind) {
   if (kind === "tap") {
     playTone(290, .04, .016, 0, "triangle");
     playTone(520, .035, .011, .012, "sine");
+  } else if (kind === "wire") {
+    playTone(250, .035, .016, 0, "triangle");
+    playTone(420, .045, .012, .015, "square");
+  } else if (kind === "menu") {
+    playTone(430, .045, .014, 0, "triangle");
+    playTone(650, .06, .015, .028, "sine");
+  } else if (kind === "nav") {
+    playTone(340, .04, .013, 0, "triangle");
+    playTone(540, .045, .012, .02, "sine");
+  } else if (kind === "level") {
+    playTone(390, .045, .014, 0, "square");
+    playTone(610, .065, .013, .025, "triangle");
+  } else if (kind === "profile") {
+    playTone(520, .045, .013, 0, "sine");
+    playTone(760, .06, .014, .03, "triangle");
+  } else if (kind === "battle") {
+    playTone(190, .07, .016, 0, "sawtooth");
+    playTone(380, .08, .014, .045, "triangle");
+  } else if (kind === "rewardUi") {
+    playTone(620, .045, .014, 0, "triangle");
+    playTone(840, .07, .016, .035, "sine");
+  } else if (kind === "modal") {
+    playTone(310, .04, .012, 0, "sine");
+    playTone(465, .045, .011, .022, "triangle");
+  } else if (kind === "back") {
+    playTone(360, .035, .011, 0, "triangle");
+    playTone(260, .055, .011, .02, "sine");
+  } else if (kind === "toggle") {
+    playTone(720, .035, .012, 0, "triangle");
+    playTone(920, .06, .013, .025, "sine");
+  } else if (kind === "gameUi") {
+    playTone(300, .035, .013, 0, "triangle");
+    playTone(470, .045, .011, .018, "sine");
   } else if (kind === "bulb") {
     playTone(540, .055, .018, 0, "sine");
     playTone(820, .09, .02, .035, "triangle");
@@ -1978,6 +2018,77 @@ function playWin() {
   playTone(660, .09, .026, .09, "triangle");
   playTone(820, .10, .028, .18, "sine");
   playTone(1040, .18, .03, .29, "sine");
+}
+
+function playMusicTone(freq, duration = .32, volume = .005, delay = 0, type = "sine") {
+  if (!musicEnabled || document.hidden) return;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const start = ctx.currentTime + delay;
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(.0001, start);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.0002, volume), start + .035);
+  gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  activeMusicNodes.add(oscillator);
+  oscillator.onended = () => activeMusicNodes.delete(oscillator);
+  oscillator.start(start);
+  oscillator.stop(start + duration + .05);
+}
+
+function scheduleMusicBar() {
+  if (!musicEnabled || document.hidden) return;
+
+  const onHome = homeScreen && !homeScreen.classList.contains("hidden");
+  const homeBars = [
+    [261.63, 329.63, 392.00, 329.63],
+    [293.66, 369.99, 440.00, 369.99],
+    [246.94, 329.63, 392.00, 493.88],
+    [220.00, 293.66, 369.99, 293.66]
+  ];
+  const gameBars = [
+    [220.00, 261.63, 329.63, 392.00],
+    [196.00, 246.94, 293.66, 369.99],
+    [233.08, 293.66, 349.23, 440.00],
+    [196.00, 261.63, 329.63, 261.63]
+  ];
+
+  const bars = onHome ? homeBars : gameBars;
+  const notes = bars[musicBarIndex % bars.length];
+  musicBarIndex += 1;
+
+  notes.forEach((freq, index) => {
+    playMusicTone(freq, .34, onHome ? .0042 : .0038, index * .42, index % 2 ? "triangle" : "sine");
+  });
+
+  playMusicTone(notes[0] / 2, 1.55, .0026, 0, "sine");
+}
+
+function startBackgroundMusic() {
+  if (!musicEnabled || musicTimer || document.hidden) return;
+  getAudioContext();
+  scheduleMusicBar();
+  musicTimer = window.setInterval(scheduleMusicBar, 1850);
+}
+
+function stopBackgroundMusic() {
+  if (musicTimer) {
+    window.clearInterval(musicTimer);
+    musicTimer = null;
+  }
+
+  activeMusicNodes.forEach(node => {
+    try { node.stop(); } catch {}
+  });
+  activeMusicNodes.clear();
 }
 
 let fpsMeasureToken = 0;
@@ -2074,6 +2185,9 @@ function syncSettingsUI() {
   if (soundSettingState) soundSettingState.textContent = soundEnabled ? "ON" : "OFF";
   soundToggleBtn?.classList.toggle("off", !soundEnabled);
 
+  if (musicSettingState) musicSettingState.textContent = musicEnabled ? "ON" : "OFF";
+  musicToggleBtn?.classList.toggle("off", !musicEnabled);
+
   if (hapticSettingState) hapticSettingState.textContent = hapticsEnabled ? "ON" : "OFF";
   hapticToggleBtn?.classList.toggle("off", !hapticsEnabled);
 }
@@ -2083,7 +2197,20 @@ function setSoundEnabled(enabled) {
   progress.settings.sound = soundEnabled;
   saveProgress();
   syncSettingsUI();
-  if (soundEnabled) playGameSound("reward");
+  if (soundEnabled) playGameSound("toggle");
+}
+
+function setMusicEnabled(enabled) {
+  musicEnabled = Boolean(enabled);
+  progress.settings.music = musicEnabled;
+  saveProgress();
+  syncSettingsUI();
+
+  if (musicEnabled) {
+    startBackgroundMusic();
+  } else {
+    stopBackgroundMusic();
+  }
 }
 
 function setHapticsEnabled(enabled) {
@@ -2254,6 +2381,7 @@ profileNameInput?.addEventListener("keydown", event => {
   }
 });
 soundToggleBtn?.addEventListener("click", () => setSoundEnabled(!soundEnabled));
+musicToggleBtn?.addEventListener("click", () => setMusicEnabled(!musicEnabled));
 hapticToggleBtn?.addEventListener("click", () => setHapticsEnabled(!hapticsEnabled));
 rewardAdBtn?.addEventListener("click", requestRewardedHint);
 battleBtn?.addEventListener("click", openBattleArena);
@@ -2338,6 +2466,54 @@ document.addEventListener("keydown", event => {
 });
 
 ensureProfile();
+document.addEventListener("click", event => {
+  const button = event.target.closest("button");
+  if (!button || button.disabled) return;
+
+  if (button.classList.contains("tile") || button.classList.contains("emoji-avatar-option")) return;
+  if (button.id === "hintBtn") return;
+
+  let kind = "modal";
+  const id = button.id || "";
+
+  if (["continueBtn", "dailyBtn", "endlessBtn"].includes(id)) {
+    kind = "menu";
+  } else if (["battleBtn", "bottomBattleBtn"].includes(id)) {
+    kind = "battle";
+  } else if (["rewardStripBtn", "bottomRewardsBtn", "rewardAdBtn"].includes(id)) {
+    kind = "rewardUi";
+  } else if (["profileBtn", "bottomProfileBtn", "saveProfileBtn"].includes(id)) {
+    kind = "profile";
+  } else if (["soundToggleBtn", "musicToggleBtn", "hapticToggleBtn", "soundBtn"].includes(id)) {
+    kind = "toggle";
+  } else if (
+    ["homeLevelsBtn", "journeyBtn", "achievementsBtn", "homeHelpBtn", "bottomHomeBtn", "levelsBtn", "settingsBtn"].includes(id) ||
+    button.closest(".game-bottom-nav")
+  ) {
+    kind = "nav";
+  } else if (button.closest(".levels-grid")) {
+    kind = "level";
+  } else if (button.matches(".modal-close,[data-close]")) {
+    kind = "back";
+  } else if (homeScreen && homeScreen.classList.contains("hidden")) {
+    kind = "gameUi";
+  }
+
+  playGameSound(kind);
+}, true);
+
+document.addEventListener("pointerdown", () => {
+  if (musicEnabled) startBackgroundMusic();
+}, { once: true, capture: true });
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopBackgroundMusic();
+  } else if (musicEnabled) {
+    startBackgroundMusic();
+  }
+});
+
 normalizeHints();
 syncHintEnergy();
 syncSettingsUI();
