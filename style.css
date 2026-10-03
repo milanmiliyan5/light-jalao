@@ -1124,3 +1124,287 @@ button:focus-visible {
     transition-duration: .001ms !important;
   }
 }
+
+
+/* ---------- 100-level visual worlds ---------- */
+body {
+  --world-rgb: 255, 203, 55;
+  --world-rgb-2: 255, 137, 28;
+  --world-bg-1: #0a1720;
+  --world-bg-2: #061018;
+  --world-accent: #ffd64c;
+  --world-hot: #fff3a3;
+  --world-secondary: #59e8ff;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(var(--world-rgb), .18), transparent 38%),
+    radial-gradient(circle at 110% 58%, rgba(var(--world-rgb-2), .09), transparent 34%),
+    linear-gradient(180deg, var(--world-bg-1) 0%, var(--world-bg-2) 54%, #03090d 100%);
+  transition: background .55s ease;
+}
+
+body[data-world="spark"] {
+  --world-rgb: 255, 203, 55;
+  --world-rgb-2: 255, 126, 22;
+  --world-bg-1: #10170d;
+  --world-bg-2: #071018;
+  --world-accent: #ffd64c;
+  --world-hot: #fff3a3;
+  --world-secondary: #59e8ff;
+}
+
+body[data-world="neon"] {
+  --world-rgb: 71, 188, 255;
+  --world-rgb-2: 48, 239, 255;
+  --world-bg-1: #071827;
+  --world-bg-2: #06101c;
+  --world-accent: #61cfff;
+  --world-hot: #e9fbff;
+  --world-secondary: #43f0ff;
+}
+
+body[data-world="bio"] {
+  --world-rgb: 92, 232, 133;
+  --world-rgb-2: 46, 205, 157;
+  --world-bg-1: #081c13;
+  --world-bg-2: #06120d;
+  --world-accent: #75e990;
+  --world-hot: #eaffdf;
+  --world-secondary: #55f0cd;
+}
+
+body[data-world="quantum"] {
+  --world-rgb: 166, 105, 255;
+  --world-rgb-2: 234, 84, 255;
+  --world-bg-1: #160d25;
+  --world-bg-2: #0b0915;
+  --world-accent: #b484ff;
+  --world-hot: #f2e8ff;
+  --world-secondary: #ef72ff;
+}
+
+body[data-world="master"] {
+  --world-rgb: 255, 210, 82;
+  --world-rgb-2: 255, 88, 54;
+  --world-bg-1: #1b1407;
+  --world-bg-2: #0f0b07;
+  --world-accent: #ffd45d;
+  --world-hot: #fff5c7;
+  --world-secondary: #ff9469;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: .55;
+  background-image:
+    linear-gradient(rgba(var(--world-rgb), .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--world-rgb), .035) 1px, transparent 1px);
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0 22%, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 45%, #000 0 22%, transparent 72%);
+  transition: background-image .45s ease;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: .22;
+  background:
+    radial-gradient(circle at 12% 28%, rgba(var(--world-rgb), .24) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 22%, rgba(var(--world-rgb-2), .22) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 76%, rgba(var(--world-rgb), .18) 0 2px, transparent 3px),
+    linear-gradient(115deg, transparent 0 46%, rgba(var(--world-rgb), .05) 46.2% 46.6%, transparent 46.8% 100%);
+  background-size: 160px 160px, 210px 210px, 190px 190px, 100% 100%;
+}
+
+.world-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 1px;
+  background: var(--world-accent);
+  box-shadow: 0 0 9px rgba(var(--world-rgb), .8);
+}
+
+.challenge-badge {
+  color: var(--world-hot);
+  border-color: rgba(var(--world-rgb), .25);
+  background: rgba(var(--world-rgb), .08);
+}
+
+.level-progress-fill,
+.hint-btn,
+.primary-btn,
+.level-card.current {
+  background: linear-gradient(135deg, var(--world-hot), var(--world-accent));
+}
+
+.level-progress-fill {
+  box-shadow: 0 0 16px rgba(var(--world-rgb), .58);
+}
+
+.mission-wire span {
+  background: linear-gradient(90deg, transparent, var(--world-hot), var(--world-accent), transparent);
+  background-size: 170% 100%;
+}
+
+.brand-bulb {
+  background: radial-gradient(circle at 38% 32%, #fff 0 9%, var(--world-hot) 30%, var(--world-accent) 72%);
+  box-shadow: 0 0 17px rgba(var(--world-rgb), .58);
+}
+
+.brand-mark {
+  filter: drop-shadow(0 0 12px rgba(var(--world-rgb), .42));
+}
+
+.tile.powered {
+  border-color: rgba(var(--world-rgb), .28);
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.055),
+    0 0 22px rgba(var(--world-rgb), .08),
+    0 8px 18px rgba(0,0,0,.22);
+}
+
+.tile.powered .wire-arm {
+  background: linear-gradient(90deg, rgba(var(--world-rgb), .72), var(--world-hot), var(--world-accent));
+  box-shadow:
+    0 0 7px rgba(var(--world-rgb), .9),
+    0 0 15px rgba(var(--world-rgb), .42);
+}
+
+.tile.powered .wire-arm.e,
+.tile.powered .wire-arm.w {
+  background: linear-gradient(180deg, rgba(var(--world-rgb), .72), var(--world-hot), var(--world-accent));
+}
+
+.tile.powered .wire-hub {
+  background: var(--world-hot);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.25),
+    0 0 10px rgba(var(--world-rgb), .9),
+    0 0 20px rgba(var(--world-rgb), .36);
+}
+
+.tile.powered .bulb-glass,
+.bulb-mini.lit i,
+.win-bulb i {
+  border-color: var(--world-accent);
+  background: radial-gradient(circle at 37% 30%, #fff 0 8%, var(--world-hot) 27%, var(--world-accent) 62%, rgba(var(--world-rgb), .88) 100%);
+  box-shadow:
+    0 0 8px var(--world-hot),
+    0 0 19px rgba(var(--world-rgb), .92),
+    0 0 36px rgba(var(--world-rgb-2), .45);
+}
+
+.game-shell {
+  border-color: rgba(var(--world-rgb), .12);
+}
+
+.game-shell::before {
+  content: "";
+  position: absolute;
+  inset: -30% 45% 62% -10%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(var(--world-rgb), .11), transparent 68%);
+  filter: blur(10px);
+}
+
+.game-shell.world-enter {
+  animation: worldEnter .55s ease both;
+}
+
+@keyframes worldEnter {
+  0% {
+    transform: scale(.987);
+    box-shadow: 0 0 0 rgba(var(--world-rgb), 0);
+  }
+  45% {
+    box-shadow: 0 0 34px rgba(var(--world-rgb), .16);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.levels-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.level-world-heading {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 9px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 1px 2px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.level-world-heading:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.level-world-heading span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.level-world-heading strong {
+  color: #dce6eb;
+  font-size: 11px;
+}
+
+.level-world-heading small {
+  color: #627683;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.level-world-heading[data-world="spark"] span,
+.level-card[data-world="spark"].current { --card-rgb: 255,203,55; }
+
+.level-world-heading[data-world="neon"] span,
+.level-card[data-world="neon"].current { --card-rgb: 71,188,255; }
+
+.level-world-heading[data-world="bio"] span,
+.level-card[data-world="bio"].current { --card-rgb: 92,232,133; }
+
+.level-world-heading[data-world="quantum"] span,
+.level-card[data-world="quantum"].current { --card-rgb: 166,105,255; }
+
+.level-world-heading[data-world="master"] span,
+.level-card[data-world="master"].current { --card-rgb: 255,210,82; }
+
+.level-world-heading span {
+  background: rgb(var(--card-rgb, 255,203,55));
+  box-shadow: 0 0 9px rgba(var(--card-rgb, 255,203,55), .5);
+}
+
+.level-card.current {
+  box-shadow: 0 0 16px rgba(var(--card-rgb, 255,203,55), .22);
+}
+
+@media (max-width: 400px) {
+  .challenge-badge {
+    max-width: 56%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .challenge-rule {
+    font-size: 8px;
+  }
+}
