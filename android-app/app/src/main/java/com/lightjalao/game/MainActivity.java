@@ -51,6 +51,7 @@ public class MainActivity extends Activity {
     private AdView bannerAd;
     private volatile RewardedAd rewardedAd;
     private boolean pageReady = false;
+    private boolean adsInitialized = false;
     private float targetRefreshRate = 60f;
 
     @Override
@@ -65,10 +66,6 @@ public class MainActivity extends Activity {
 
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.rgb(14, 43, 60));
-
-        LinearLayout appColumn = new LinearLayout(this);
-        appColumn.setOrientation(LinearLayout.VERTICAL);
-        appColumn.setBackgroundColor(Color.rgb(14, 43, 60));
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(14, 43, 60));
@@ -102,32 +99,30 @@ public class MainActivity extends Activity {
                 if (!pageReady) {
                     pageReady = true;
                     revealGame();
+                    initializeAdsAfterFirstPaint();
                 }
             }
         });
 
-        LinearLayout.LayoutParams webParams =
-            new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
-        appColumn.addView(webView, webParams);
-
-        adHolder = new FrameLayout(this);
-        adHolder.setVisibility(View.GONE);
-        adHolder.setBackgroundColor(Color.rgb(9, 31, 44));
-        appColumn.addView(
-            adHolder,
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        );
-
         root.addView(
-            appColumn,
+            webView,
             new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         );
+
+        // Overlay the banner at the bottom so loading it never resizes the game WebView.
+        adHolder = new FrameLayout(this);
+        adHolder.setVisibility(View.GONE);
+        adHolder.setBackgroundColor(Color.TRANSPARENT);
+        FrameLayout.LayoutParams adHolderParams =
+            new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL
+            );
+        root.addView(adHolder, adHolderParams);
 
         splash = createSplash();
         root.addView(
@@ -140,11 +135,6 @@ public class MainActivity extends Activity {
 
         setContentView(root);
         enterImmersiveMode();
-
-        MobileAds.initialize(this, initializationStatus -> {
-            loadBannerAd();
-            loadRewardedAd();
-        });
 
         webView.loadUrl("file:///android_asset/www/index.html?native=1");
     }
@@ -238,6 +228,20 @@ public class MainActivity extends Activity {
         );
     }
 
+    private void initializeAdsAfterFirstPaint() {
+        if (adsInitialized) return;
+        adsInitialized = true;
+
+        // Give the local offline game time to paint and settle first.
+        root.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            MobileAds.initialize(this, initializationStatus -> {
+                loadBannerAd();
+                loadRewardedAd();
+            });
+        }, 1400);
+    }
+
     private void loadBannerAd() {
         if (isFinishing()) return;
 
@@ -247,7 +251,9 @@ public class MainActivity extends Activity {
         bannerAd.setAdListener(new AdListener() {
             @Override
             public void onAdLoaded() {
+                adHolder.setAlpha(0f);
                 adHolder.setVisibility(View.VISIBLE);
+                adHolder.animate().alpha(1f).setDuration(180).start();
             }
 
             @Override
