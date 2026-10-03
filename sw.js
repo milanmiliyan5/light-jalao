@@ -1,4 +1,4 @@
-const CACHE_NAME = "light-jalao-pwa-v2-mobile-fullscreen";
+const CACHE_NAME = "light-jalao-premium-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
