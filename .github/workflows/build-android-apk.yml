@@ -11,6 +11,7 @@ on:
       - "style.css"
       - "script.js"
       - "manifest.webmanifest"
+      - "sw.js"
       - "icons/**"
       - ".github/workflows/build-android-apk.yml"
 
@@ -21,6 +22,7 @@ concurrency:
   group: light-jalao-android-apk
   cancel-in-progress: true
 
+# Bundles the latest current game files into the APK
 jobs:
   build-apk:
     runs-on: ubuntu-latest
