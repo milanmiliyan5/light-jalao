@@ -1959,3 +1959,174 @@ body[data-world="infinity"] {
 
 .level-world-heading[data-world="infinity"] span,
 .level-card[data-world="infinity"].current { --card-rgb: 255,95,225; }
+
+
+/* ---------- Daily Challenge + Endless Mode ---------- */
+.home-screen {
+  overflow-x: hidden;
+  overflow-y: auto;
+  place-items: start center;
+}
+
+.home-content {
+  margin: auto 0;
+  padding: 10px 0;
+}
+
+.home-special-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 9px;
+}
+
+.special-mode-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 37px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 8px;
+  min-height: 67px;
+  padding: 9px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  color: #e8f0f4;
+  background: rgba(255,255,255,.035);
+  cursor: pointer;
+  text-align: left;
+  transition: transform .16s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.special-mode-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .6;
+}
+
+.special-mode-card:active { transform: scale(.97); }
+
+.daily-mode-card {
+  border-color: rgba(63,224,255,.15);
+  background:
+    radial-gradient(circle at 15% 30%, rgba(63,224,255,.09), transparent 40%),
+    rgba(255,255,255,.028);
+}
+
+.daily-mode-card::after {
+  background: linear-gradient(125deg, transparent 48%, rgba(255,214,76,.04));
+}
+
+.endless-mode-card {
+  border-color: rgba(219,94,255,.16);
+  background:
+    radial-gradient(circle at 15% 30%, rgba(219,94,255,.09), transparent 40%),
+    rgba(255,255,255,.028);
+}
+
+.endless-mode-card::after {
+  background: linear-gradient(125deg, transparent 48%, rgba(104,104,255,.05));
+}
+
+.special-mode-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.daily-mode-card .special-mode-icon {
+  color: #fff3a3;
+  background: rgba(63,224,255,.09);
+  box-shadow: inset 0 0 0 1px rgba(63,224,255,.1);
+}
+
+.endless-mode-card .special-mode-icon {
+  color: #f5c9ff;
+  background: rgba(219,94,255,.09);
+  box-shadow: inset 0 0 0 1px rgba(219,94,255,.1);
+  font-size: 24px;
+}
+
+.special-mode-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.special-mode-copy small,
+.special-mode-copy strong,
+.special-mode-copy em { display: block; }
+
+.special-mode-copy small {
+  margin-bottom: 2px;
+  color: #607786;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: .11em;
+}
+
+.special-mode-copy strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.special-mode-copy em {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #7f929e;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.special-mode-card > b {
+  position: relative;
+  z-index: 1;
+  color: #718692;
+  font-size: 16px;
+}
+
+body[data-world="daily"] {
+  --world-rgb: 62, 224, 255;
+  --world-rgb-2: 255, 205, 69;
+  --world-bg-1: #061b24;
+  --world-bg-2: #071018;
+  --world-accent: #54e5ff;
+  --world-hot: #fff1a3;
+  --world-secondary: #ffd34d;
+}
+
+body[data-world="endless"] {
+  --world-rgb: 221, 91, 255;
+  --world-rgb-2: 93, 112, 255;
+  --world-bg-1: #180b22;
+  --world-bg-2: #090914;
+  --world-accent: #df69ff;
+  --world-hot: #f7dbff;
+  --world-secondary: #697cff;
+}
+
+@media (max-width: 390px) {
+  .home-special-modes { grid-template-columns: 1fr; }
+  .special-mode-card { min-height: 58px; }
+  .home-footer { font-size: 8px; }
+}
+
+@media (max-height: 760px) {
+  .home-special-modes { margin-top: 7px; }
+  .special-mode-card { min-height: 58px; }
+  .home-content { padding-top: 2px; padding-bottom: 8px; }
+}
