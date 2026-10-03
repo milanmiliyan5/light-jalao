@@ -1018,7 +1018,7 @@ function updateHomeScreen() {
   const dailyRecord = progress.daily[today];
 
   homeWorld.textContent = level.worldName;
-  homeLevel.textContent = `Level ${nextNumber} / ${LEVELS.length}`;
+  homeLevel.textContent = `Level ${nextNumber}`;
   homeStars.textContent = totalEarnedStars();
   homeCompleted.textContent = completed;
   homeStreak.textContent = currentDailyStreak();
