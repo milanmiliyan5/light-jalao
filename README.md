@@ -1,35 +1,32 @@
 # Light Jalao 💡
 
-A mobile-first glowing brain puzzle game built with plain HTML, CSS and JavaScript.
+**Light Jalao** is a mobile-first wire-connect brain puzzle.
 
-## How to play
+## Core gameplay
 
-Tap a light to toggle:
-- the tapped light
-- the light above
-- the light below
-- the light on the left
-- the light on the right
+Rotate wire tiles to build a complete electrical circuit from the power source to every bulb. Electricity visually travels only through correctly connected wire ends, and bulbs glow when power reaches them.
 
-The goal is to switch **every light ON**.
+## Current version
 
-## Current V1 features
-
-- 20 solvable levels
-- 3×3, 4×4 and 5×5 boards
-- Moves, timer and local best score
-- Smart hint system
-- Level unlock progress saved in the browser
-- Restart and replay
-- Sound + vibration feedback
-- Bulb glow, hint pulse and win confetti animations
-- Responsive mobile and desktop UI
+- Wire-rotation puzzle gameplay
+- Procedurally generated solvable circuit layouts
+- 20 levels
+- 3×3, 4×4 and 5×5 difficulty progression
+- Multiple bulb endpoints
+- Live powered-wire glow
+- Bulb glow animation
+- Moves, timer and best score
+- Hint system
+- Restart / replay
+- Level unlock progress saved locally
+- Sound and vibration feedback
+- Responsive mobile + desktop design
 - No external libraries or assets
 
-## Run locally
+## Goal
 
-Open `index.html` in a browser.
+**Connect all wires and light every bulb.**
 
 ## GitHub Pages
 
-This repo is ready to be hosted as a static GitHub Pages site from the `main` branch.
+The game is ready to run as a static site from the `main` branch.
