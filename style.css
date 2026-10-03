@@ -4403,3 +4403,354 @@ body.native-android .home-screen {
 body.native-android .arcade-home-content {
   padding-bottom: max(68px, env(safe-area-inset-bottom));
 }
+
+
+/* ======================================================================
+   PLAYER PROFILE — emoji-only battle identity
+   ====================================================================== */
+.arcade-topbar {
+  grid-template-columns: minmax(92px, auto) 1fr 42px;
+}
+
+.player-chip {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid rgba(205,239,255,.15);
+  border-radius: 14px;
+  color: #f0fbff;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
+  box-shadow: inset 0 1px rgba(255,255,255,.08), 0 7px 20px rgba(0,18,29,.14);
+  text-align: left;
+}
+
+.player-chip-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,221,85,.22);
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 40% 25%, rgba(255,230,112,.16), transparent 58%),
+    rgba(0,24,34,.28);
+  font-size: 20px;
+}
+
+.player-chip-copy {
+  min-width: 0;
+}
+
+.player-chip-copy small,
+.player-chip-copy strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-chip-copy small {
+  color: #7195a6;
+  font-size: 5px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.player-chip-copy strong {
+  margin-top: 2px;
+  max-width: 75px;
+  font-size: 8px;
+}
+
+.arcade-online-note {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  height: 12px;
+  margin: -2px 0 1px 5px;
+  color: #6e98a9;
+  font-size: 5px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.arcade-online-note i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #5eeca0;
+  box-shadow: 0 0 7px rgba(94,236,160,.7);
+}
+
+.player-profile-modal {
+  width: min(94vw, 430px);
+  max-height: min(90dvh, 760px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.profile-hero {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  align-items: center;
+  gap: 13px;
+  margin: 2px 0 17px;
+  padding: 12px;
+  border: 1px solid rgba(207,240,255,.10);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255,218,74,.11), transparent 45%),
+    rgba(255,255,255,.035);
+}
+
+.profile-avatar-large {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border: 2px solid rgba(255,222,91,.34);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 40% 25%, rgba(255,230,110,.18), transparent 52%),
+    linear-gradient(145deg, #173f53, #102d3e);
+  box-shadow: 0 0 26px rgba(255,208,57,.10);
+  font-size: 40px;
+}
+
+.profile-hero h2 {
+  margin: 1px 0 5px;
+  overflow: hidden;
+  color: #f5fbff;
+  font-size: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-id-line {
+  margin: 0 !important;
+  color: #7895a4 !important;
+  font-size: 8px !important;
+}
+
+.profile-id-line b {
+  margin-left: 4px;
+  color: #b8d3df;
+  letter-spacing: .08em;
+}
+
+.profile-field {
+  display: block;
+  margin-bottom: 15px;
+}
+
+.profile-field > span,
+.profile-section-head > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8faebb;
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.profile-field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 13px;
+  border: 1px solid rgba(204,239,255,.13);
+  outline: 0;
+  border-radius: 14px;
+  color: #f3fbff;
+  background: rgba(255,255,255,.045);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: inset 0 1px rgba(255,255,255,.04);
+}
+
+.profile-field input:focus {
+  border-color: rgba(89,232,255,.52);
+  box-shadow: 0 0 0 3px rgba(89,232,255,.08);
+}
+
+.profile-field > small {
+  display: block;
+  margin-top: 5px;
+  color: #698492;
+  font-size: 7px;
+}
+
+.profile-avatar-section {
+  margin-bottom: 14px;
+}
+
+.profile-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-section-head > span {
+  margin-bottom: 6px;
+}
+
+.profile-section-head small {
+  color: #667f8d;
+  font-size: 7px;
+}
+
+.emoji-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.emoji-avatar-option {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid rgba(205,239,255,.09);
+  border-radius: 11px;
+  background: rgba(255,255,255,.035);
+  font-size: clamp(18px, 6vw, 25px);
+  transition: transform .12s ease, border-color .15s ease, background .15s ease;
+}
+
+.emoji-avatar-option:active {
+  transform: scale(.92);
+}
+
+.emoji-avatar-option.selected {
+  border-color: rgba(255,221,83,.58);
+  background: rgba(255,214,63,.12);
+  box-shadow: 0 0 14px rgba(255,208,48,.12), inset 0 0 0 1px rgba(255,236,143,.14);
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.profile-stats div {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-content: center;
+  gap: 1px 4px;
+  min-height: 58px;
+  border: 1px solid rgba(208,240,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.03);
+  text-align: center;
+}
+
+.profile-stats span,
+.profile-stats strong {
+  font-size: 12px;
+}
+
+.profile-stats small {
+  grid-column: 1 / -1;
+  color: #698695;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.battle-profile-note {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid rgba(166,113,255,.14);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(153,96,255,.11), transparent 48%),
+    rgba(255,255,255,.028);
+}
+
+.battle-profile-note > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: rgba(154,100,255,.09);
+  font-size: 18px;
+}
+
+.battle-profile-note p {
+  margin: 0 !important;
+}
+
+.battle-profile-note strong,
+.battle-profile-note small {
+  display: block;
+}
+
+.battle-profile-note strong {
+  color: #d9e7ed;
+  font-size: 9px;
+}
+
+.battle-profile-note small {
+  margin-top: 3px;
+  color: #708b99;
+  font-size: 7px;
+  line-height: 1.35;
+}
+
+.profile-error {
+  margin: 8px 0 0 !important;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: #ffd6dc !important;
+  background: rgba(255,94,120,.10);
+  font-size: 8px !important;
+}
+
+.profile-save-btn {
+  min-height: 50px;
+  margin-top: 12px;
+}
+
+@media (max-width: 390px) {
+  .arcade-topbar {
+    grid-template-columns: minmax(82px, auto) 1fr 40px;
+    gap: 6px;
+  }
+
+  .player-chip {
+    grid-template-columns: 30px minmax(0,1fr);
+    min-height: 40px;
+    padding-left: 4px;
+  }
+
+  .player-chip-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 17px;
+  }
+
+  .player-chip-copy strong {
+    max-width: 62px;
+    font-size: 7px;
+  }
+
+  .emoji-avatar-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
