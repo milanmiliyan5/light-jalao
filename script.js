@@ -11,54 +11,50 @@ const DIRS = [
 ];
 
 const WORLD_DEFS = [
-  {
-    key: "spark",
-    name: "Spark Lab",
-    start: 1,
-    end: 20,
-    tagline: "SPARK LAB • CONNECT • POWER • GLOW"
-  },
-  {
-    key: "neon",
-    name: "Neon Grid",
-    start: 21,
-    end: 40,
-    tagline: "NEON GRID • ROUTE THE ENERGY"
-  },
-  {
-    key: "bio",
-    name: "Bio Circuit",
-    start: 41,
-    end: 60,
-    tagline: "BIO CIRCUIT • GROW THE NETWORK"
-  },
-  {
-    key: "quantum",
-    name: "Quantum Zone",
-    start: 61,
-    end: 80,
-    tagline: "QUANTUM ZONE • MASTER THE FLOW"
-  },
-  {
-    key: "master",
-    name: "Master Core",
-    start: 81,
-    end: 100,
-    tagline: "MASTER CORE • FINAL POWER RUN"
-  }
+  { key: "spark",    name: "Spark Lab",      start: 1,   end: 20,  tagline: "SPARK LAB • CONNECT • POWER • GLOW" },
+  { key: "neon",     name: "Neon Grid",      start: 21,  end: 40,  tagline: "NEON GRID • ROUTE THE ENERGY" },
+  { key: "bio",      name: "Bio Circuit",     start: 41,  end: 60,  tagline: "BIO CIRCUIT • GROW THE NETWORK" },
+  { key: "quantum",  name: "Quantum Zone",   start: 61,  end: 80,  tagline: "QUANTUM ZONE • MASTER THE FLOW" },
+  { key: "master",   name: "Master Core",    start: 81,  end: 100, tagline: "MASTER CORE • FINAL POWER RUN" },
+
+  { key: "arctic",   name: "Arctic Pulse",   start: 101, end: 150, tagline: "ARCTIC PULSE • FREEZE THE GRID" },
+  { key: "solar",    name: "Solar Forge",    start: 151, end: 200, tagline: "SOLAR FORGE • HARNESS THE HEAT" },
+  { key: "cyber",    name: "Cyber City",     start: 201, end: 250, tagline: "CYBER CITY • LINK THE NETWORK" },
+  { key: "ocean",    name: "Ocean Circuit",  start: 251, end: 300, tagline: "OCEAN CIRCUIT • DIVE INTO POWER" },
+  { key: "plasma",   name: "Plasma Storm",   start: 301, end: 350, tagline: "PLASMA STORM • CONTROL THE SURGE" },
+  { key: "retro",    name: "Retro Grid",     start: 351, end: 400, tagline: "RETRO GRID • RELAY THE SIGNAL" },
+  { key: "void",     name: "Void Matrix",    start: 401, end: 450, tagline: "VOID MATRIX • FIND THE PATH" },
+  { key: "infinity", name: "Infinity Core",  start: 451, end: 500, tagline: "INFINITY CORE • COMPLETE THE FINAL CIRCUIT" }
 ];
 
 const MODE_DEFS = [
-  { start: 1,  end: 10,  mode: "Starter Circuit", rule: "Learn corners, lines and simple routes" },
-  { start: 11, end: 20,  mode: "Branch Circuit", rule: "T-junctions split power to more bulbs" },
-  { start: 21, end: 30,  mode: "Locked Wires", rule: "Blue locked wires cannot rotate" },
-  { start: 31, end: 40,  mode: "Obstacle Grid", rule: "Route around blocked circuit cells" },
-  { start: 41, end: 50,  mode: "Dense Network", rule: "More bulbs and tighter branches" },
-  { start: 51, end: 60,  mode: "Locked Maze", rule: "Use fixed clues through blocked paths" },
-  { start: 61, end: 70,  mode: "High Voltage", rule: "Long 6×6 routes with heavy branching" },
-  { start: 71, end: 80,  mode: "Expert Grid", rule: "Locks, walls and dense routes combine" },
-  { start: 81, end: 90,  mode: "Master Circuit", rule: "Plan the full network before rotating" },
-  { start: 91, end: 100, mode: "Final Reactor", rule: "Maximum circuit challenge" }
+  { start: 1,   end: 10,  mode: "Starter Circuit",  rule: "Learn corners, lines and simple routes" },
+  { start: 11,  end: 20,  mode: "Branch Circuit",   rule: "T-junctions split power to more bulbs" },
+  { start: 21,  end: 30,  mode: "Locked Wires",     rule: "Blue locked wires cannot rotate" },
+  { start: 31,  end: 40,  mode: "Obstacle Grid",    rule: "Route around blocked circuit cells" },
+  { start: 41,  end: 50,  mode: "Dense Network",    rule: "More bulbs and tighter branches" },
+  { start: 51,  end: 60,  mode: "Locked Maze",      rule: "Use fixed clues through blocked paths" },
+  { start: 61,  end: 70,  mode: "High Voltage",     rule: "Long 6×6 routes with heavy branching" },
+  { start: 71,  end: 80,  mode: "Expert Grid",      rule: "Locks, walls and dense routes combine" },
+  { start: 81,  end: 90,  mode: "Master Circuit",   rule: "Plan the full network before rotating" },
+  { start: 91,  end: 100, mode: "Final Reactor",    rule: "Maximum first-chapter circuit challenge" },
+
+  { start: 101, end: 125, mode: "Frozen Lines",     rule: "Cold paths hide behind fixed junctions" },
+  { start: 126, end: 150, mode: "Ice Locks",        rule: "More frozen wires restrict your route" },
+  { start: 151, end: 175, mode: "Solar Branches",   rule: "Split intense power across long branches" },
+  { start: 176, end: 200, mode: "Heat Maze",        rule: "Navigate hot zones and fixed connections" },
+  { start: 201, end: 225, mode: "Cyber Links",      rule: "Dense digital networks demand precision" },
+  { start: 226, end: 250, mode: "Firewall Grid",    rule: "Blocked nodes create tight cyber routes" },
+  { start: 251, end: 275, mode: "Deep Current",     rule: "Long underwater circuits branch heavily" },
+  { start: 276, end: 300, mode: "Pressure Grid",    rule: "Locks and walls squeeze the available path" },
+  { start: 301, end: 325, mode: "Plasma Links",     rule: "Control unstable multi-branch circuits" },
+  { start: 326, end: 350, mode: "Overload Maze",    rule: "Heavy obstacles leave fewer safe routes" },
+  { start: 351, end: 375, mode: "Retro Relay",      rule: "Relay power through dense classic grids" },
+  { start: 376, end: 400, mode: "Arcade Grid",      rule: "Fast-looking circuits hide hard solutions" },
+  { start: 401, end: 425, mode: "Void Paths",       rule: "Sparse space creates deceptive connections" },
+  { start: 426, end: 450, mode: "Gravity Locks",    rule: "Locked routes dominate the dark matrix" },
+  { start: 451, end: 475, mode: "Infinity Network", rule: "Master every mechanic in one network" },
+  { start: 476, end: 500, mode: "Final Infinity",   rule: "The hardest circuits in Light Jalao" }
 ];
 
 function worldForLevel(number) {
@@ -66,7 +62,7 @@ function worldForLevel(number) {
 }
 
 function modeForLevel(number) {
-  return MODE_DEFS.find(mode => number >= mode.start && number <= mode.end) || MODE_DEFS[0];
+  return MODE_DEFS.find(mode => number >= mode.start && number <= mode.end) || MODE_DEFS[MODE_DEFS.length - 1];
 }
 
 function buildLevelConfig(number) {
@@ -135,6 +131,54 @@ function buildLevelConfig(number) {
     minBulbs = 8;
   }
 
+  if (number >= 101) {
+    fixed = 4 + Math.min(2, ramp);
+    blockers = 4 + Math.min(1, ramp);
+    minBulbs = 7 + Math.min(2, ramp);
+  }
+
+  if (number >= 151) {
+    fixed = 5 + Math.min(1, ramp);
+    blockers = 4 + Math.min(2, ramp);
+    minBulbs = 8;
+  }
+
+  if (number >= 201) {
+    fixed = 5 + Math.min(2, ramp);
+    blockers = 5 + Math.min(1, ramp);
+    minBulbs = 8 + Math.min(1, ramp);
+  }
+
+  if (number >= 251) {
+    fixed = 6;
+    blockers = 5 + Math.min(2, ramp);
+    minBulbs = 8 + Math.min(1, ramp);
+  }
+
+  if (number >= 301) {
+    fixed = 6 + Math.min(1, ramp);
+    blockers = 6;
+    minBulbs = 9;
+  }
+
+  if (number >= 351) {
+    fixed = 7;
+    blockers = 6 + Math.min(1, ramp);
+    minBulbs = 9;
+  }
+
+  if (number >= 401) {
+    fixed = 7 + Math.min(1, ramp);
+    blockers = 7;
+    minBulbs = 9 + Math.min(1, ramp);
+  }
+
+  if (number >= 451) {
+    fixed = 8;
+    blockers = 7 + Math.min(1, ramp);
+    minBulbs = 10;
+  }
+
   return {
     number,
     size,
@@ -151,7 +195,7 @@ function buildLevelConfig(number) {
   };
 }
 
-const LEVELS = Array.from({ length: 100 }, (_, index) => buildLevelConfig(index + 1));
+const LEVELS = Array.from({ length: 500 }, (_, index) => buildLevelConfig(index + 1));
 
 const STORAGE_KEY = "lightJalaoWireProgressV1";
 const HELP_KEY = "lightJalaoWireHelpSeen";
@@ -575,7 +619,15 @@ function applyWorldTheme(level) {
     neon: "#06121d",
     bio: "#07150f",
     quantum: "#100a1c",
-    master: "#171205"
+    master: "#171205",
+    arctic: "#071723",
+    solar: "#211006",
+    cyber: "#071522",
+    ocean: "#061923",
+    plasma: "#1c0818",
+    retro: "#16100a",
+    void: "#090914",
+    infinity: "#160b18"
   };
 
   if (metaTheme) metaTheme.setAttribute("content", themeColors[level.world] || "#071018");
@@ -623,7 +675,9 @@ function buildLevel(levelIndex) {
   bestText.textContent = progress.best[String(currentLevel)]?.moves ?? "—";
   levelProgressFill.style.width = `${((currentLevel + 1) / LEVELS.length) * 100}%`;
 
-  if (currentLevel >= 90) {
+  if (currentLevel >= 475) {
+    statusText.textContent = "Final Infinity: every clue matters. Read the full network before touching a wire.";
+  } else if (currentLevel >= 90 && currentLevel < 100) {
     statusText.textContent = "Final Reactor: read the whole network first. Locks and walls leave little room for mistakes.";
   } else if (level.blockers && level.fixed) {
     statusText.textContent = "Locked clues and blocked cells combine — plan the route before rotating.";
@@ -963,11 +1017,13 @@ function renderLevels() {
     const unlocked = number <= progress.unlocked;
     const done = Boolean(progress.best[String(index)]);
 
-    if ((number - 1) % 20 === 0) {
+    const previousWorld = index > 0 ? LEVELS[index - 1].world : null;
+    if (index === 0 || previousWorld !== level.world) {
+      const world = worldForLevel(number);
       const heading = document.createElement("div");
       heading.className = "level-world-heading";
       heading.dataset.world = level.world;
-      heading.innerHTML = `<span></span><strong>${level.worldName}</strong><small>Levels ${number}–${Math.min(number + 19, LEVELS.length)}</small>`;
+      heading.innerHTML = `<span></span><strong>${level.worldName}</strong><small>Levels ${world.start}–${world.end}</small>`;
       levelsGrid.appendChild(heading);
     }
 
