@@ -18,7 +18,7 @@
   <link rel="icon" href="icons/light-jalao-icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/light-jalao-icon.svg" />
   <title>Light Jalao 💡</title>
-  <link rel="stylesheet" href="style.css?v=20261003-arcade-home-v1" />
+  <link rel="stylesheet" href="style.css?v=20261003-player-profile-v1" />
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
@@ -31,7 +31,13 @@
 
     <div class="home-content arcade-home-content">
       <div class="arcade-topbar">
-        <span class="arcade-status"><i></i> OFFLINE READY</span>
+        <button class="player-chip" id="profileBtn" type="button" aria-label="Player profile">
+          <span class="player-chip-avatar" id="homeProfileAvatar">😎</span>
+          <span class="player-chip-copy">
+            <small>PLAYER</small>
+            <strong id="homeProfileName">Player</strong>
+          </span>
+        </button>
         <div class="arcade-titleplate">
           <span>⚡</span>
           <strong>LIGHT JALAO</strong>
@@ -39,6 +45,7 @@
         </div>
         <button class="home-settings-btn arcade-settings-btn" id="settingsBtn" type="button" aria-label="Game settings">⚙</button>
       </div>
+      <div class="arcade-online-note"><i></i><span>OFFLINE PROFILE • BATTLE READY</span></div>
 
       <section class="arcade-hero">
         <div class="arcade-logo" aria-hidden="true">
@@ -309,6 +316,52 @@
     </section>
   </div>
 
+  <div class="modal-backdrop hidden" id="profileModal" aria-hidden="true">
+    <section class="modal player-profile-modal">
+      <button class="modal-close" data-close="profileModal" aria-label="Close">×</button>
+
+      <div class="profile-hero">
+        <div class="profile-avatar-large" id="profileAvatarPreview">😎</div>
+        <div>
+          <span class="mini-label">PLAYER PROFILE</span>
+          <h2 id="profilePreviewName">Player</h2>
+          <p class="profile-id-line">ID <b id="profilePlayerId">LJ-00000000</b></p>
+        </div>
+      </div>
+
+      <label class="profile-field">
+        <span>PLAYER NAME</span>
+        <input id="profileNameInput" type="text" maxlength="18" autocomplete="off" spellcheck="false" placeholder="Enter your name" />
+        <small>3–18 characters • letters, numbers, spaces and _ allowed</small>
+      </label>
+
+      <div class="profile-avatar-section">
+        <div class="profile-section-head">
+          <span>CHOOSE EMOJI AVATAR</span>
+          <small>No real photos</small>
+        </div>
+        <div class="emoji-avatar-grid" id="emojiAvatarGrid" role="listbox" aria-label="Choose avatar"></div>
+      </div>
+
+      <div class="profile-stats">
+        <div><span>⭐</span><strong id="profileStars">0</strong><small>Stars</small></div>
+        <div><span>⚡</span><strong id="profileCleared">0</strong><small>Cleared</small></div>
+        <div><span>∞</span><strong id="profileEndless">0</strong><small>Endless</small></div>
+      </div>
+
+      <div class="battle-profile-note">
+        <span>⚔️</span>
+        <p><strong>Battle-ready profile</strong><small>Saved on this device now. Future online battles can sync this identity to your account.</small></p>
+      </div>
+
+      <p class="profile-error hidden" id="profileError"></p>
+
+      <button class="primary-btn profile-save-btn" id="saveProfileBtn" type="button">
+        Save Profile
+      </button>
+    </section>
+  </div>
+
   <div class="modal-backdrop hidden" id="settingsModal" aria-hidden="true">
     <section class="modal settings-modal">
       <button class="modal-close" data-close="settingsModal" aria-label="Close">×</button>
@@ -365,6 +418,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=20261003-fps-meter-v2"></script>
+  <script src="script.js?v=20261003-player-profile-v1"></script>
 </body>
 </html>
