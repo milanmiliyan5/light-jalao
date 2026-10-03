@@ -1,0 +1,36 @@
+{
+  "name": "Light Jalao - Circuit Puzzle",
+  "short_name": "Light Jalao",
+  "description": "Connect the wires, power the circuit and light every bulb across 500 levels, Daily Challenge and Endless Mode.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#061018",
+  "theme_color": "#071018",
+  "lang": "en",
+  "categories": ["games", "puzzle"],
+  "icons": [
+    {
+      "src": "icons/light-jalao-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/light-jalao-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Play Light Jalao",
+      "short_name": "Play",
+      "url": "./"
+    }
+  ]
+}
