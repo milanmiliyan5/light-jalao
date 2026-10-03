@@ -254,6 +254,7 @@ const achievementToast = document.getElementById("achievementToast");
 const achievementToastIcon = document.getElementById("achievementToastIcon");
 const achievementToastTitle = document.getElementById("achievementToastTitle");
 const achievementToastCopy = document.getElementById("achievementToastCopy");
+const installAppBtn = document.getElementById("installAppBtn");
 
 let currentLevel = 0;
 let solvedMasks = [];
@@ -1530,6 +1531,66 @@ function playWin() {
 function vibrate(pattern) {
   if ("vibrate" in navigator) navigator.vibrate(pattern);
 }
+
+let deferredInstallPrompt = null;
+
+function isStandaloneApp() {
+  return window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+}
+
+function updateInstallButton() {
+  const installed = isStandaloneApp();
+  document.body.classList.toggle("app-installed", installed);
+
+  if (!installAppBtn) return;
+
+  if (installed) {
+    installAppBtn.classList.add("hidden");
+    return;
+  }
+
+  installAppBtn.classList.remove("hidden");
+}
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallButton();
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  document.body.classList.add("app-installed");
+  installAppBtn?.classList.add("hidden");
+});
+
+installAppBtn?.addEventListener("click", async () => {
+  if (isStandaloneApp()) {
+    installAppBtn.classList.add("hidden");
+    return;
+  }
+
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    updateInstallButton();
+    return;
+  }
+
+  statusText.textContent = "Install: Chrome menu ⋮ → Add to Home screen / Install app.";
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {
+      // Game stays fully usable online even if service worker registration fails.
+    });
+  });
+}
+
+updateInstallButton();
 
 restartBtn.addEventListener("click", restartLevel);
 hintBtn.addEventListener("click", showHint);
