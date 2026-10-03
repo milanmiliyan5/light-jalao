@@ -255,6 +255,18 @@ const achievementToastIcon = document.getElementById("achievementToastIcon");
 const achievementToastTitle = document.getElementById("achievementToastTitle");
 const achievementToastCopy = document.getElementById("achievementToastCopy");
 const installAppBtn = document.getElementById("installAppBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const soundToggleBtn = document.getElementById("soundToggleBtn");
+const hapticToggleBtn = document.getElementById("hapticToggleBtn");
+const soundSettingState = document.getElementById("soundSettingState");
+const hapticSettingState = document.getElementById("hapticSettingState");
+const hintEnergyText = document.getElementById("hintEnergyText");
+const hintMiniTimer = document.getElementById("hintMiniTimer");
+const hintModalCount = document.getElementById("hintModalCount");
+const hintTimerText = document.getElementById("hintTimerText");
+const hintRechargeFill = document.getElementById("hintRechargeFill");
+const rewardAdBtn = document.getElementById("rewardAdBtn");
+const rewardAdStatus = document.getElementById("rewardAdStatus");
 
 let currentLevel = 0;
 let solvedMasks = [];
@@ -270,7 +282,10 @@ let timer = null;
 let timerStarted = false;
 let locked = false;
 let soundEnabled = true;
+let hapticsEnabled = true;
 let audioContext = null;
+let lastLitBulbs = 0;
+let hintUiTimer = null;
 let parMoves = 0;
 let gameMode = "campaign";
 let activeLevel = null;
@@ -280,7 +295,12 @@ let endlessRun = 0;
 let endlessSeedBase = 0;
 
 const progress = loadProgress();
+soundEnabled = progress.settings?.sound !== false;
+hapticsEnabled = progress.settings?.haptics !== false;
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
+
+const HINT_MAX = 5;
+const HINT_RECHARGE_MS = 10 * 60 * 1000;
 
 function loadProgress() {
   try {
@@ -292,10 +312,26 @@ function loadProgress() {
       stars: raw.stars && typeof raw.stars === "object" ? raw.stars : {},
       daily: raw.daily && typeof raw.daily === "object" ? raw.daily : {},
       endlessBest: Math.max(0, Number(raw.endlessBest) || 0),
-      achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {}
+      achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {},
+      settings: raw.settings && typeof raw.settings === "object"
+        ? raw.settings
+        : { sound: true, haptics: true },
+      hints: raw.hints && typeof raw.hints === "object"
+        ? raw.hints
+        : { count: 5, lastRefillAt: Date.now() }
     };
   } catch {
-    return { unlocked: 1, currentLevel: 0, best: {}, stars: {}, daily: {}, endlessBest: 0, achievements: {} };
+    return {
+      unlocked: 1,
+      currentLevel: 0,
+      best: {},
+      stars: {},
+      daily: {},
+      endlessBest: 0,
+      achievements: {},
+      settings: { sound: true, haptics: true },
+      hints: { count: 5, lastRefillAt: Date.now() }
+    };
   }
 }
 
@@ -694,6 +730,8 @@ function showAchievementToast(achievement, extraCount = 0) {
     : achievement.title;
   achievementToastCopy.textContent = achievement.copy;
   achievementToast.classList.remove("hidden");
+  playGameSound("achievement");
+  vibrate([18, 28, 45]);
 
   window.clearTimeout(achievementToastTimer);
   achievementToastTimer = window.setTimeout(() => {
@@ -791,6 +829,8 @@ function updateHomeScreen() {
   endlessStatus.textContent = `Best run: ${progress.endlessBest || 0}`;
   renderWorldProgress();
   renderAchievements();
+  updateHintUI();
+  syncSettingsUI();
 }
 
 function showHome() {
@@ -928,6 +968,7 @@ function loadPuzzle(level, mode = "campaign") {
   elapsed = 0;
   locked = false;
   timerStarted = false;
+  lastLitBulbs = 0;
   activeLevel = level;
   gameMode = mode;
 
@@ -1157,6 +1198,11 @@ function updatePower(checkWin = false) {
   });
 
   const litBulbs = bulbs.filter(index => powered.has(index)).length;
+  if (timerStarted && litBulbs > lastLitBulbs) {
+    playGameSound("bulb");
+    vibrate([10, 18, 12]);
+  }
+  lastLitBulbs = litBulbs;
   powerText.textContent = `${litBulbs} / ${bulbs.length} bulbs`;
   missionBulb.classList.toggle("lit", litBulbs === bulbs.length);
 
@@ -1295,7 +1341,176 @@ function clearHintMarkers() {
   });
 }
 
-function showHint() {
+function normalizeHints() {
+  if (!progress.hints || typeof progress.hints !== "object") {
+    progress.hints = { count: HINT_MAX, lastRefillAt: Date.now() };
+  }
+
+  progress.hints.count = Math.max(0, Math.min(HINT_MAX, Number(progress.hints.count) || 0));
+  if (!Number.isFinite(Number(progress.hints.lastRefillAt))) {
+    progress.hints.lastRefillAt = Date.now();
+  }
+}
+
+function syncHintEnergy(now = Date.now()) {
+  normalizeHints();
+
+  if (progress.hints.count >= HINT_MAX) {
+    progress.hints.count = HINT_MAX;
+    progress.hints.lastRefillAt = now;
+    return false;
+  }
+
+  const elapsedMs = Math.max(0, now - Number(progress.hints.lastRefillAt));
+  const gained = Math.floor(elapsedMs / HINT_RECHARGE_MS);
+  if (gained <= 0) return false;
+
+  progress.hints.count = Math.min(HINT_MAX, progress.hints.count + gained);
+  progress.hints.lastRefillAt += gained * HINT_RECHARGE_MS;
+
+  if (progress.hints.count >= HINT_MAX) {
+    progress.hints.lastRefillAt = now;
+  }
+
+  return true;
+}
+
+function nextHintRemainingMs(now = Date.now()) {
+  syncHintEnergy(now);
+  if (progress.hints.count >= HINT_MAX) return 0;
+  const elapsedMs = Math.max(0, now - Number(progress.hints.lastRefillAt));
+  return Math.max(0, HINT_RECHARGE_MS - elapsedMs);
+}
+
+function formatHintCountdown(ms) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function nativeRewardedReady() {
+  try {
+    return Boolean(window.LightJalaoAds?.isRewardedReady?.());
+  } catch {
+    return false;
+  }
+}
+
+function updateHintUI() {
+  const changed = syncHintEnergy();
+  const count = progress.hints.count;
+  const remaining = nextHintRemainingMs();
+
+  if (changed) saveProgress();
+
+  if (hintEnergyText) hintEnergyText.textContent = count;
+  hintBtn?.classList.toggle("empty", count <= 0);
+
+  if (hintMiniTimer) {
+    hintMiniTimer.textContent = count >= HINT_MAX
+      ? "FULL ENERGY"
+      : `+1 in ${formatHintCountdown(remaining)}`;
+  }
+
+  if (hintModalCount) hintModalCount.textContent = `${count} / ${HINT_MAX}`;
+  if (hintTimerText) hintTimerText.textContent = count >= HINT_MAX ? "READY" : formatHintCountdown(remaining);
+
+  if (hintRechargeFill) {
+    const fill = count >= HINT_MAX
+      ? 100
+      : Math.max(0, Math.min(100, ((HINT_RECHARGE_MS - remaining) / HINT_RECHARGE_MS) * 100));
+    hintRechargeFill.style.width = `${fill}%`;
+  }
+
+  if (rewardAdBtn) {
+    const nativeApp = Boolean(window.LightJalaoAds);
+    const online = navigator.onLine !== false;
+    rewardAdBtn.disabled = !nativeApp || !online;
+    if (!online) {
+      rewardAdStatus.textContent = "Offline ho — free recharge timer chalta rahega.";
+    } else if (!nativeApp) {
+      rewardAdStatus.textContent = "Reward ads Android APK me available hain.";
+    } else if (nativeRewardedReady()) {
+      rewardAdStatus.textContent = "Ad ready • complete karke +1 Hint lo.";
+    } else {
+      rewardAdStatus.textContent = "Ad load ho raha hai… thoda sa wait karo.";
+    }
+  }
+}
+
+function requestSmartHint() {
+  if (locked) return;
+
+  const wrongTiles = incorrectRotatableTiles();
+  if (!wrongTiles.length) {
+    performSmartHint();
+    return;
+  }
+
+  syncHintEnergy();
+
+  if (progress.hints.count <= 0) {
+    updateHintUI();
+    showModal("hintRechargeModal");
+    playGameSound("empty");
+    vibrate(20);
+    return;
+  }
+
+  const wasFull = progress.hints.count >= HINT_MAX;
+  progress.hints.count -= 1;
+  if (wasFull) progress.hints.lastRefillAt = Date.now();
+
+  saveProgress();
+  updateHintUI();
+  performSmartHint();
+  playGameSound("hint");
+}
+
+function grantRewardedHint() {
+  syncHintEnergy();
+  progress.hints.count = Math.min(HINT_MAX, progress.hints.count + 1);
+  if (progress.hints.count >= HINT_MAX) {
+    progress.hints.lastRefillAt = Date.now();
+  }
+  saveProgress();
+  updateHintUI();
+  hideModal("hintRechargeModal");
+  statusText.textContent = "Reward unlocked: +1 Smart Hint ready. ✦";
+  playGameSound("reward");
+  vibrate([25, 35, 55]);
+}
+
+window.onNativeHintReward = grantRewardedHint;
+window.onNativeAdReady = () => updateHintUI();
+window.onNativeAdUnavailable = () => {
+  if (rewardAdBtn) rewardAdBtn.disabled = false;
+  if (rewardAdStatus) rewardAdStatus.textContent = "Ad abhi available nahi hai. Free timer se hint recharge hota rahega.";
+};
+
+function requestRewardedHint() {
+  if (navigator.onLine === false) {
+    rewardAdStatus.textContent = "Offline ho — ad nahi chalega. Timer se free hint milega.";
+    return;
+  }
+
+  if (!window.LightJalaoAds?.showRewardedHint) {
+    rewardAdStatus.textContent = "Reward ad Android APK me available hai.";
+    return;
+  }
+
+  rewardAdBtn.disabled = true;
+  rewardAdStatus.textContent = "Ad open ho raha hai… reward complete karo.";
+  try {
+    window.LightJalaoAds.showRewardedHint();
+  } catch {
+    rewardAdBtn.disabled = false;
+    rewardAdStatus.textContent = "Ad open nahi hua. Thodi der baad try karo.";
+  }
+}
+
+function performSmartHint() {
   if (locked) return;
 
   clearHintMarkers();
@@ -1463,12 +1678,16 @@ function renderLevels() {
 
 function showModal(id) {
   const el = document.getElementById(id);
+  if (!el) return;
+  if (id === "hintRechargeModal") updateHintUI();
+  if (id === "settingsModal") syncSettingsUI();
   el.classList.remove("hidden");
   el.setAttribute("aria-hidden", "false");
 }
 
 function hideModal(id) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.classList.add("hidden");
   el.setAttribute("aria-hidden", "true");
 }
@@ -1494,10 +1713,11 @@ function getAudioContext() {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) audioContext = new AudioContextClass();
   }
+  if (audioContext?.state === "suspended") audioContext.resume().catch(() => {});
   return audioContext;
 }
 
-function playTone(freq, duration = .07, volume = .028, delay = 0) {
+function playTone(freq, duration = .07, volume = .028, delay = 0, type = "sine") {
   if (!soundEnabled) return;
   const ctx = getAudioContext();
   if (!ctx) return;
@@ -1506,36 +1726,105 @@ function playTone(freq, duration = .07, volume = .028, delay = 0) {
   const gain = ctx.createGain();
   const start = ctx.currentTime + delay;
 
-  oscillator.type = "sine";
+  oscillator.type = type;
   oscillator.frequency.setValueAtTime(freq, start);
   gain.gain.setValueAtTime(.0001, start);
-  gain.gain.exponentialRampToValueAtTime(volume, start + .01);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.0002, volume), start + .008);
   gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
 
   oscillator.connect(gain);
   gain.connect(ctx.destination);
   oscillator.start(start);
-  oscillator.stop(start + duration + .02);
+  oscillator.stop(start + duration + .03);
+}
+
+function playGameSound(kind) {
+  if (!soundEnabled) return;
+
+  if (kind === "tap") {
+    playTone(290, .04, .016, 0, "triangle");
+    playTone(520, .035, .011, .012, "sine");
+  } else if (kind === "bulb") {
+    playTone(540, .055, .018, 0, "sine");
+    playTone(820, .09, .02, .035, "triangle");
+  } else if (kind === "hint") {
+    playTone(610, .06, .018, 0, "triangle");
+    playTone(880, .10, .023, .055, "sine");
+  } else if (kind === "reward") {
+    playTone(520, .07, .02, 0, "triangle");
+    playTone(720, .08, .023, .07, "sine");
+    playTone(980, .12, .024, .15, "sine");
+  } else if (kind === "achievement") {
+    playTone(590, .07, .02, 0, "triangle");
+    playTone(790, .07, .023, .08, "triangle");
+    playTone(1050, .16, .025, .16, "sine");
+  } else if (kind === "empty") {
+    playTone(230, .08, .014, 0, "triangle");
+    playTone(185, .11, .012, .07, "triangle");
+  }
 }
 
 function playClick() {
-  playTone(360, .045, .02);
+  playGameSound("tap");
 }
 
 function playWin() {
-  playTone(520, .09, .03);
-  playTone(660, .09, .03, .1);
-  playTone(820, .15, .035, .2);
+  playTone(520, .08, .024, 0, "triangle");
+  playTone(660, .09, .026, .09, "triangle");
+  playTone(820, .10, .028, .18, "sine");
+  playTone(1040, .18, .03, .29, "sine");
+}
+
+function syncSettingsUI() {
+  if (soundBtn) {
+    soundBtn.classList.toggle("sound-on", soundEnabled);
+    soundBtn.textContent = soundEnabled ? "♪" : "×";
+    soundBtn.setAttribute("aria-label", soundEnabled ? "Sound on" : "Sound off");
+  }
+
+  if (soundSettingState) soundSettingState.textContent = soundEnabled ? "ON" : "OFF";
+  soundToggleBtn?.classList.toggle("off", !soundEnabled);
+
+  if (hapticSettingState) hapticSettingState.textContent = hapticsEnabled ? "ON" : "OFF";
+  hapticToggleBtn?.classList.toggle("off", !hapticsEnabled);
+}
+
+function setSoundEnabled(enabled) {
+  soundEnabled = Boolean(enabled);
+  progress.settings.sound = soundEnabled;
+  saveProgress();
+  syncSettingsUI();
+  if (soundEnabled) playGameSound("reward");
+}
+
+function setHapticsEnabled(enabled) {
+  hapticsEnabled = Boolean(enabled);
+  progress.settings.haptics = hapticsEnabled;
+  saveProgress();
+  syncSettingsUI();
+  if (hapticsEnabled) vibrate(24);
 }
 
 function vibrate(pattern) {
+  if (!hapticsEnabled) return;
+
+  try {
+    if (window.LightJalaoNative?.vibrate) {
+      const value = Array.isArray(pattern) ? pattern.join(",") : String(pattern);
+      window.LightJalaoNative.vibrate(value);
+      return;
+    }
+  } catch {}
+
   if ("vibrate" in navigator) navigator.vibrate(pattern);
 }
 
 let deferredInstallPrompt = null;
 
 function isNativeAndroidWrapper() {
-  return new URLSearchParams(window.location.search).get("android") === "1" ||
+  const params = new URLSearchParams(window.location.search);
+  return params.get("android") === "1" ||
+    params.get("native") === "1" ||
     navigator.userAgent.includes("LightJalaoAndroid");
 }
 
@@ -1558,6 +1847,9 @@ function updateInstallButton() {
 
   installAppBtn.classList.remove("hidden");
 }
+
+window.addEventListener("online", updateHintUI);
+window.addEventListener("offline", updateHintUI);
 
 window.addEventListener("beforeinstallprompt", event => {
   event.preventDefault();
@@ -1599,7 +1891,7 @@ if ("serviceWorker" in navigator) {
 updateInstallButton();
 
 restartBtn.addEventListener("click", restartLevel);
-hintBtn.addEventListener("click", showHint);
+hintBtn.addEventListener("click", requestSmartHint);
 helpBtn.addEventListener("click", () => showModal("helpModal"));
 homeBtn.addEventListener("click", showHome);
 continueBtn.addEventListener("click", () => {
@@ -1608,6 +1900,10 @@ continueBtn.addEventListener("click", () => {
 });
 homeLevelsBtn.addEventListener("click", () => showModal("levelsModal"));
 homeHelpBtn.addEventListener("click", () => showModal("helpModal"));
+settingsBtn?.addEventListener("click", () => showModal("settingsModal"));
+soundToggleBtn?.addEventListener("click", () => setSoundEnabled(!soundEnabled));
+hapticToggleBtn?.addEventListener("click", () => setHapticsEnabled(!hapticsEnabled));
+rewardAdBtn?.addEventListener("click", requestRewardedHint);
 dailyBtn.addEventListener("click", startDailyChallenge);
 endlessBtn.addEventListener("click", startEndlessMode);
 journeyBtn.addEventListener("click", () => {
@@ -1621,13 +1917,7 @@ achievementsBtn.addEventListener("click", () => {
 });
 levelsBtn.addEventListener("click", () => showModal("levelsModal"));
 
-soundBtn.addEventListener("click", () => {
-  soundEnabled = !soundEnabled;
-  soundBtn.classList.toggle("sound-on", soundEnabled);
-  soundBtn.textContent = soundEnabled ? "♪" : "×";
-  soundBtn.setAttribute("aria-label", soundEnabled ? "Sound on" : "Sound off");
-  if (soundEnabled) playTone(650, .06, .025);
-});
+soundBtn.addEventListener("click", () => setSoundEnabled(!soundEnabled));
 
 document.querySelectorAll("[data-close]").forEach(button => {
   button.addEventListener("click", () => hideModal(button.dataset.close));
@@ -1682,8 +1972,17 @@ document.addEventListener("keydown", event => {
     hideModal("levelsModal");
     hideModal("journeyModal");
     hideModal("achievementsModal");
+    hideModal("settingsModal");
+    hideModal("hintRechargeModal");
   }
 });
+
+normalizeHints();
+syncHintEnergy();
+syncSettingsUI();
+updateHintUI();
+window.clearInterval(hintUiTimer);
+hintUiTimer = window.setInterval(updateHintUI, 1000);
 
 buildLevel(currentLevel);
 evaluateAchievements(false);
