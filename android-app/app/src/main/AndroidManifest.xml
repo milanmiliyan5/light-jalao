@@ -7,9 +7,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/light_jalao_logo"
         android:label="Light Jalao"
-        android:roundIcon="@drawable/ic_launcher"
+        android:roundIcon="@drawable/light_jalao_logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false">
