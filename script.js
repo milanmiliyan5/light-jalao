@@ -10,32 +10,148 @@ const DIRS = [
   { bit: W, dr: 0, dc: -1, opposite: E, cls: "w" }
 ];
 
-const LEVELS = [
-  { size: 3, seed: 101, mode: "Starter Circuit", rule: "Learn the current flow", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
-  { size: 3, seed: 211, mode: "Starter Circuit", rule: "Corners and straight wires", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
-  { size: 3, seed: 307, mode: "Starter Circuit", rule: "Power more than one bulb", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
-  { size: 3, seed: 419, mode: "Starter Circuit", rule: "Longer routes begin", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
-
-  { size: 4, seed: 523, mode: "Branch Circuit", rule: "T-junctions split the power", minBulbs: 3, branchy: true, fixed: 0, blockers: 0 },
-  { size: 4, seed: 631, mode: "Branch Circuit", rule: "Three bulbs, one circuit", minBulbs: 3, branchy: true, fixed: 0, blockers: 0 },
-  { size: 4, seed: 743, mode: "Branch Circuit", rule: "Follow every branch", minBulbs: 3, branchy: true, fixed: 0, blockers: 0 },
-  { size: 4, seed: 857, mode: "Branch Circuit", rule: "Denser junction puzzle", minBulbs: 4, branchy: true, fixed: 0, blockers: 0 },
-
-  { size: 4, seed: 967, mode: "Locked Wires", rule: "Blue locks cannot rotate", minBulbs: 3, branchy: true, fixed: 1, blockers: 0 },
-  { size: 4, seed: 1087, mode: "Locked Wires", rule: "Use fixed wires as clues", minBulbs: 3, branchy: true, fixed: 1, blockers: 0 },
-  { size: 4, seed: 1201, mode: "Locked Wires", rule: "Two fixed pieces guide the route", minBulbs: 4, branchy: true, fixed: 2, blockers: 0 },
-  { size: 4, seed: 1327, mode: "Locked Wires", rule: "Plan around locked junctions", minBulbs: 4, branchy: true, fixed: 2, blockers: 0 },
-
-  { size: 5, seed: 1451, mode: "Obstacle Grid", rule: "Route around blocked cells", minBulbs: 4, branchy: true, fixed: 1, blockers: 1 },
-  { size: 5, seed: 1597, mode: "Obstacle Grid", rule: "More walls change the route", minBulbs: 4, branchy: true, fixed: 1, blockers: 2 },
-  { size: 5, seed: 1723, mode: "Obstacle Grid", rule: "Locks and walls combine", minBulbs: 4, branchy: true, fixed: 2, blockers: 2 },
-  { size: 5, seed: 1871, mode: "Obstacle Grid", rule: "Tight paths, more branches", minBulbs: 5, branchy: true, fixed: 2, blockers: 3 },
-
-  { size: 5, seed: 1999, mode: "Master Circuit", rule: "Everything combines now", minBulbs: 5, branchy: true, fixed: 2, blockers: 2 },
-  { size: 5, seed: 2131, mode: "Master Circuit", rule: "Read the circuit before rotating", minBulbs: 5, branchy: true, fixed: 3, blockers: 2 },
-  { size: 5, seed: 2269, mode: "Master Circuit", rule: "Heavy branching challenge", minBulbs: 5, branchy: true, fixed: 3, blockers: 3 },
-  { size: 5, seed: 2411, mode: "Master Circuit", rule: "Final mixed circuit", minBulbs: 6, branchy: true, fixed: 3, blockers: 3 }
+const WORLD_DEFS = [
+  {
+    key: "spark",
+    name: "Spark Lab",
+    start: 1,
+    end: 20,
+    tagline: "SPARK LAB • CONNECT • POWER • GLOW"
+  },
+  {
+    key: "neon",
+    name: "Neon Grid",
+    start: 21,
+    end: 40,
+    tagline: "NEON GRID • ROUTE THE ENERGY"
+  },
+  {
+    key: "bio",
+    name: "Bio Circuit",
+    start: 41,
+    end: 60,
+    tagline: "BIO CIRCUIT • GROW THE NETWORK"
+  },
+  {
+    key: "quantum",
+    name: "Quantum Zone",
+    start: 61,
+    end: 80,
+    tagline: "QUANTUM ZONE • MASTER THE FLOW"
+  },
+  {
+    key: "master",
+    name: "Master Core",
+    start: 81,
+    end: 100,
+    tagline: "MASTER CORE • FINAL POWER RUN"
+  }
 ];
+
+const MODE_DEFS = [
+  { start: 1,  end: 10,  mode: "Starter Circuit", rule: "Learn corners, lines and simple routes" },
+  { start: 11, end: 20,  mode: "Branch Circuit", rule: "T-junctions split power to more bulbs" },
+  { start: 21, end: 30,  mode: "Locked Wires", rule: "Blue locked wires cannot rotate" },
+  { start: 31, end: 40,  mode: "Obstacle Grid", rule: "Route around blocked circuit cells" },
+  { start: 41, end: 50,  mode: "Dense Network", rule: "More bulbs and tighter branches" },
+  { start: 51, end: 60,  mode: "Locked Maze", rule: "Use fixed clues through blocked paths" },
+  { start: 61, end: 70,  mode: "High Voltage", rule: "Long 6×6 routes with heavy branching" },
+  { start: 71, end: 80,  mode: "Expert Grid", rule: "Locks, walls and dense routes combine" },
+  { start: 81, end: 90,  mode: "Master Circuit", rule: "Plan the full network before rotating" },
+  { start: 91, end: 100, mode: "Final Reactor", rule: "Maximum circuit challenge" }
+];
+
+function worldForLevel(number) {
+  return WORLD_DEFS.find(world => number >= world.start && number <= world.end) || WORLD_DEFS[0];
+}
+
+function modeForLevel(number) {
+  return MODE_DEFS.find(mode => number >= mode.start && number <= mode.end) || MODE_DEFS[0];
+}
+
+function buildLevelConfig(number) {
+  const world = worldForLevel(number);
+  const mode = modeForLevel(number);
+  const withinTen = (number - 1) % 10;
+  const ramp = Math.floor(withinTen / 3);
+
+  let size = 3;
+  let branchy = false;
+  let fixed = 0;
+  let blockers = 0;
+  let minBulbs = 2;
+
+  if (number >= 5) size = 4;
+  if (number >= 21) size = 5;
+  if (number >= 51) size = 6;
+
+  if (number >= 11) {
+    branchy = true;
+    minBulbs = 3 + Math.min(2, ramp);
+  }
+
+  if (number >= 21) {
+    fixed = 1 + Math.min(2, ramp);
+    minBulbs = 4 + Math.min(1, ramp);
+  }
+
+  if (number >= 31) {
+    blockers = 1 + Math.min(2, ramp);
+  }
+
+  if (number >= 41) {
+    fixed = 1 + Math.min(2, ramp);
+    blockers = Math.max(blockers, Math.min(2, ramp));
+    minBulbs = 5 + Math.min(1, ramp);
+  }
+
+  if (number >= 51) {
+    fixed = 2 + Math.min(2, ramp);
+    blockers = 2 + Math.min(1, ramp);
+    minBulbs = 5 + Math.min(2, ramp);
+  }
+
+  if (number >= 61) {
+    fixed = 2 + Math.min(2, ramp);
+    blockers = 2 + Math.min(2, ramp);
+    minBulbs = 6 + Math.min(1, ramp);
+  }
+
+  if (number >= 71) {
+    fixed = 3 + Math.min(2, ramp);
+    blockers = 3 + Math.min(1, ramp);
+    minBulbs = 6 + Math.min(2, ramp);
+  }
+
+  if (number >= 81) {
+    fixed = 4 + Math.min(1, ramp);
+    blockers = 4 + Math.min(1, ramp);
+    minBulbs = 7 + Math.min(1, ramp);
+  }
+
+  if (number >= 91) {
+    fixed = 5;
+    blockers = 5;
+    minBulbs = 8;
+  }
+
+  return {
+    number,
+    size,
+    seed: 101 + number * 137 + Math.floor(number / 10) * 1009,
+    mode: mode.mode,
+    rule: mode.rule,
+    minBulbs,
+    branchy,
+    fixed,
+    blockers,
+    world: world.key,
+    worldName: world.name,
+    tagline: world.tagline
+  };
+}
+
+const LEVELS = Array.from({ length: 100 }, (_, index) => buildLevelConfig(index + 1));
 
 const STORAGE_KEY = "lightJalaoWireProgressV1";
 const HELP_KEY = "lightJalaoWireHelpSeen";
@@ -50,6 +166,7 @@ const statusText = document.getElementById("statusText");
 const levelProgressFill = document.getElementById("levelProgressFill");
 const challengeBadge = document.getElementById("challengeBadge");
 const challengeRule = document.getElementById("challengeRule");
+const brandTagline = document.getElementById("brandTagline");
 const missionBulb = document.getElementById("missionBulb");
 const restartBtn = document.getElementById("restartBtn");
 const hintBtn = document.getElementById("hintBtn");
@@ -361,6 +478,29 @@ function makeScramble(size, seed) {
   return result;
 }
 
+function applyWorldTheme(level) {
+  document.body.dataset.world = level.world;
+  brandTagline.textContent = level.tagline;
+
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  const themeColors = {
+    spark: "#071018",
+    neon: "#06121d",
+    bio: "#07150f",
+    quantum: "#100a1c",
+    master: "#171205"
+  };
+
+  if (metaTheme) metaTheme.setAttribute("content", themeColors[level.world] || "#071018");
+
+  const shell = document.querySelector(".game-shell");
+  if (shell) {
+    shell.classList.remove("world-enter");
+    void shell.offsetWidth;
+    shell.classList.add("world-enter");
+  }
+}
+
 function buildLevel(levelIndex) {
   stopTimer();
   currentLevel = levelIndex;
@@ -370,6 +510,7 @@ function buildLevel(levelIndex) {
   timerStarted = false;
 
   const level = LEVELS[currentLevel];
+  applyWorldTheme(level);
   blockedCells = makeBlockedCells(level.size, level.blockers || 0, level.seed);
   solvedMasks = generateBestTree(level, blockedCells);
   bulbs = solvedMasks
@@ -387,14 +528,18 @@ function buildLevel(levelIndex) {
   startRotations = [...rotations];
 
   levelText.textContent = `Level ${currentLevel + 1}`;
-  challengeBadge.textContent = level.mode;
+  challengeBadge.textContent = `${level.worldName} • ${level.mode}`;
   challengeRule.textContent = level.rule;
   movesText.textContent = "0";
   timeText.textContent = "00:00";
   bestText.textContent = progress.best[String(currentLevel)]?.moves ?? "—";
   levelProgressFill.style.width = `${((currentLevel + 1) / LEVELS.length) * 100}%`;
 
-  if (level.blockers) {
+  if (currentLevel >= 90) {
+    statusText.textContent = "Final Reactor: read the whole network first. Locks and walls leave little room for mistakes.";
+  } else if (level.blockers && level.fixed) {
+    statusText.textContent = "Locked clues and blocked cells combine — plan the route before rotating.";
+  } else if (level.blockers) {
     statusText.textContent = "Blocked cells cannot carry wires. Route the circuit around them.";
   } else if (level.fixed) {
     statusText.textContent = "Blue locked wires are fixed in place — use them as clues.";
@@ -700,7 +845,15 @@ function completeLevel() {
       ? "New best! ✨"
       : "Lights on! ✨";
 
-  winCopy.textContent = `${bulbs.length} bulbs • ${moves} moves • ${formatTime(elapsed)}`;
+  const level = LEVELS[currentLevel];
+  const completedNumber = currentLevel + 1;
+  const worldFinished = completedNumber % 20 === 0;
+
+  if (worldFinished && completedNumber < LEVELS.length) {
+    winTitle.textContent = `${level.worldName} complete! ✨`;
+  }
+
+  winCopy.textContent = `${level.worldName} • ${bulbs.length} bulbs • ${moves} moves • ${formatTime(elapsed)}`;
   nextBtn.textContent = currentLevel === LEVELS.length - 1 ? "Play from Level 1 ↻" : "Next Level →";
 
   makeConfetti();
@@ -716,9 +869,18 @@ function renderLevels() {
     const number = index + 1;
     const unlocked = number <= progress.unlocked;
     const done = Boolean(progress.best[String(index)]);
-    const button = document.createElement("button");
 
+    if ((number - 1) % 20 === 0) {
+      const heading = document.createElement("div");
+      heading.className = "level-world-heading";
+      heading.dataset.world = level.world;
+      heading.innerHTML = `<span></span><strong>${level.worldName}</strong><small>Levels ${number}–${Math.min(number + 19, LEVELS.length)}</small>`;
+      levelsGrid.appendChild(heading);
+    }
+
+    const button = document.createElement("button");
     button.type = "button";
+    button.dataset.world = level.world;
     button.className = [
       "level-card",
       index === currentLevel ? "current" : "",
@@ -729,7 +891,7 @@ function renderLevels() {
     button.textContent = unlocked ? number : "🔒";
     button.disabled = !unlocked;
     button.setAttribute("aria-label", unlocked
-      ? `Level ${number}, ${level.size} by ${level.size}, ${level.mode}`
+      ? `Level ${number}, ${level.size} by ${level.size}, ${level.worldName}, ${level.mode}`
       : `Level ${number} locked`);
 
     if (unlocked) {
