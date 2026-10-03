@@ -3537,3 +3537,209 @@ body.native-android .home-footer {
 body.native-android {
   min-height: 100dvh;
 }
+
+
+/* ======================================================================
+   STABLE GAME VIEWPORT — no whole-page scrolling / rubber-band movement
+   ====================================================================== */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+body {
+  position: relative;
+}
+
+/* Home itself never moves. Only its content can scroll internally on
+   genuinely short screens, without dragging the whole app. */
+.home-screen {
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+.home-content {
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.home-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Main puzzle always lives inside one viewport. */
+.app {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.modal {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Native Android: fixed game canvas like a real game, not a web page. */
+body.native-android .app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding:
+    max(6px, env(safe-area-inset-top))
+    8px
+    max(64px, env(safe-area-inset-bottom));
+}
+
+body.native-android .topbar {
+  flex: 0 0 auto;
+  padding: 3px 2px 7px;
+}
+
+body.native-android .game-shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 11px 9px 10px;
+  border-radius: 21px;
+}
+
+body.native-android .level-progress {
+  margin: 8px 0 9px;
+}
+
+body.native-android .challenge-row {
+  margin: 0 0 7px;
+}
+
+body.native-android .mission-strip {
+  min-height: 50px;
+  margin-bottom: 7px;
+  padding: 7px 9px;
+}
+
+body.native-android .board-frame {
+  flex: 0 1 auto;
+  width: min(100%, 445px, max(235px, calc(100dvh - 420px)));
+  max-width: min(100%, 445px);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 2px;
+}
+
+body.native-android .status-text {
+  min-height: 28px;
+  margin: 7px auto 6px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+body.native-android .stats {
+  flex: 0 0 auto;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+
+body.native-android .stat {
+  padding: 6px 4px;
+}
+
+body.native-android .stat strong {
+  font-size: 15px;
+}
+
+body.native-android .actions {
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
+body.native-android .ghost-btn,
+body.native-android .hint-btn {
+  min-height: 44px;
+}
+
+body.native-android .footer-text {
+  display: none;
+}
+
+/* Long lists are intentional scroll areas. Everything else remains fixed. */
+.levels-modal,
+.progress-modal,
+.achievements-modal {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* Short phones: shrink spacing and the puzzle instead of making the page scroll. */
+@media (max-height: 700px) and (pointer: coarse) {
+  body.native-android .topbar {
+    padding-bottom: 4px;
+  }
+
+  body.native-android .brand-mark {
+    transform: scale(.86);
+  }
+
+  body.native-android .game-shell {
+    padding-top: 8px;
+  }
+
+  body.native-android .level-progress {
+    margin: 6px 0 6px;
+  }
+
+  body.native-android .challenge-row {
+    margin-bottom: 5px;
+  }
+
+  body.native-android .mission-strip {
+    min-height: 44px;
+    margin-bottom: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  body.native-android .board-frame {
+    width: min(100%, max(215px, calc(100dvh - 390px)));
+  }
+
+  body.native-android .status-text {
+    min-height: 24px;
+    margin: 4px auto;
+    font-size: 10px;
+  }
+
+  body.native-android .stat {
+    padding: 4px 3px;
+  }
+
+  body.native-android .ghost-btn,
+  body.native-android .hint-btn {
+    min-height: 40px;
+  }
+}
