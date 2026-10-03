@@ -259,6 +259,20 @@ const settingsBtn = document.getElementById("settingsBtn");
 const profileBtn = document.getElementById("profileBtn");
 const homeProfileAvatar = document.getElementById("homeProfileAvatar");
 const homeProfileName = document.getElementById("homeProfileName");
+const bottomProfileAvatar = document.getElementById("bottomProfileAvatar");
+const bottomHomeBtn = document.getElementById("bottomHomeBtn");
+const bottomBattleBtn = document.getElementById("bottomBattleBtn");
+const bottomRewardsBtn = document.getElementById("bottomRewardsBtn");
+const bottomProfileBtn = document.getElementById("bottomProfileBtn");
+const battleBtn = document.getElementById("battleBtn");
+const rewardStripBtn = document.getElementById("rewardStripBtn");
+const homeRewardText = document.getElementById("homeRewardText");
+const rewardStreakValue = document.getElementById("rewardStreakValue");
+const battleProfileAvatar = document.getElementById("battleProfileAvatar");
+const battleProfileName = document.getElementById("battleProfileName");
+const rewardModalStreak = document.getElementById("rewardModalStreak");
+const rewardModalStars = document.getElementById("rewardModalStars");
+const rewardModalAchievements = document.getElementById("rewardModalAchievements");
 const profileAvatarPreview = document.getElementById("profileAvatarPreview");
 const profilePreviewName = document.getElementById("profilePreviewName");
 const profilePlayerId = document.getElementById("profilePlayerId");
@@ -915,6 +929,9 @@ function updateHomeProfile() {
   ensureProfile();
   if (homeProfileAvatar) homeProfileAvatar.textContent = progress.profile.avatar;
   if (homeProfileName) homeProfileName.textContent = progress.profile.name;
+  if (bottomProfileAvatar) bottomProfileAvatar.textContent = progress.profile.avatar;
+  if (battleProfileAvatar) battleProfileAvatar.textContent = progress.profile.avatar;
+  if (battleProfileName) battleProfileName.textContent = progress.profile.name;
 }
 
 function openProfile() {
@@ -962,6 +979,37 @@ function savePlayerProfile() {
   vibrate([15, 20, 35]);
 }
 
+function unlockedAchievementCount() {
+  return Object.keys(progress.achievements || {}).filter(key => progress.achievements[key]).length;
+}
+
+function updateLobbyRewards() {
+  const streak = currentDailyStreak();
+  const stars = totalEarnedStars();
+  const trophies = unlockedAchievementCount();
+
+  if (rewardStreakValue) rewardStreakValue.textContent = streak;
+  if (homeRewardText) {
+    homeRewardText.textContent = streak > 0
+      ? `Day ${streak} streak • keep it going`
+      : "Play today's Daily Challenge";
+  }
+
+  if (rewardModalStreak) rewardModalStreak.textContent = streak;
+  if (rewardModalStars) rewardModalStars.textContent = stars;
+  if (rewardModalAchievements) rewardModalAchievements.textContent = trophies;
+}
+
+function openBattleArena() {
+  updateHomeProfile();
+  showModal("battleModal");
+}
+
+function openRewards() {
+  updateLobbyRewards();
+  showModal("rewardsModal");
+}
+
 function updateHomeScreen() {
   const level = LEVELS[currentLevel];
   const completed = completedLevelsCount();
@@ -983,6 +1031,7 @@ function updateHomeScreen() {
   updateHintUI();
   syncSettingsUI();
   updateHomeProfile();
+  updateLobbyRewards();
 }
 
 function showHome() {
@@ -2062,6 +2111,8 @@ function vibrate(pattern) {
 function closeTopGameModal() {
   const priority = [
     "hintRechargeModal",
+    "battleModal",
+    "rewardsModal",
     "profileModal",
     "settingsModal",
     "achievementsModal",
@@ -2189,6 +2240,7 @@ homeLevelsBtn.addEventListener("click", () => showModal("levelsModal"));
 homeHelpBtn.addEventListener("click", () => showModal("helpModal"));
 settingsBtn?.addEventListener("click", () => showModal("settingsModal"));
 profileBtn?.addEventListener("click", openProfile);
+bottomProfileBtn?.addEventListener?.("click", openProfile);
 saveProfileBtn?.addEventListener("click", savePlayerProfile);
 profileNameInput?.addEventListener("input", () => {
   const cleaned = normalizeProfileName(profileNameInput.value);
@@ -2204,6 +2256,11 @@ profileNameInput?.addEventListener("keydown", event => {
 soundToggleBtn?.addEventListener("click", () => setSoundEnabled(!soundEnabled));
 hapticToggleBtn?.addEventListener("click", () => setHapticsEnabled(!hapticsEnabled));
 rewardAdBtn?.addEventListener("click", requestRewardedHint);
+battleBtn?.addEventListener("click", openBattleArena);
+bottomBattleBtn?.addEventListener("click", openBattleArena);
+rewardStripBtn?.addEventListener("click", openRewards);
+bottomRewardsBtn?.addEventListener("click", openRewards);
+bottomHomeBtn?.addEventListener("click", showHome);
 dailyBtn.addEventListener("click", startDailyChallenge);
 endlessBtn.addEventListener("click", startEndlessMode);
 journeyBtn.addEventListener("click", () => {
@@ -2274,6 +2331,8 @@ document.addEventListener("keydown", event => {
     hideModal("achievementsModal");
     hideModal("settingsModal");
     hideModal("profileModal");
+    hideModal("battleModal");
+    hideModal("rewardsModal");
     hideModal("hintRechargeModal");
   }
 });
