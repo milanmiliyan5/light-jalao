@@ -239,6 +239,21 @@ const dailyBtn = document.getElementById("dailyBtn");
 const endlessBtn = document.getElementById("endlessBtn");
 const dailyStatus = document.getElementById("dailyStatus");
 const endlessStatus = document.getElementById("endlessStatus");
+const homeStreak = document.getElementById("homeStreak");
+const journeyBtn = document.getElementById("journeyBtn");
+const achievementsBtn = document.getElementById("achievementsBtn");
+const journeySummary = document.getElementById("journeySummary");
+const achievementCount = document.getElementById("achievementCount");
+const journeyCleared = document.getElementById("journeyCleared");
+const journeyStars = document.getElementById("journeyStars");
+const journeyStreak = document.getElementById("journeyStreak");
+const worldProgressList = document.getElementById("worldProgressList");
+const achievementsGrid = document.getElementById("achievementsGrid");
+const achievementModalSummary = document.getElementById("achievementModalSummary");
+const achievementToast = document.getElementById("achievementToast");
+const achievementToastIcon = document.getElementById("achievementToastIcon");
+const achievementToastTitle = document.getElementById("achievementToastTitle");
+const achievementToastCopy = document.getElementById("achievementToastCopy");
 
 let currentLevel = 0;
 let solvedMasks = [];
@@ -275,10 +290,11 @@ function loadProgress() {
       best: raw.best && typeof raw.best === "object" ? raw.best : {},
       stars: raw.stars && typeof raw.stars === "object" ? raw.stars : {},
       daily: raw.daily && typeof raw.daily === "object" ? raw.daily : {},
-      endlessBest: Math.max(0, Number(raw.endlessBest) || 0)
+      endlessBest: Math.max(0, Number(raw.endlessBest) || 0),
+      achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {}
     };
   } catch {
-    return { unlocked: 1, currentLevel: 0, best: {}, stars: {}, daily: {}, endlessBest: 0 };
+    return { unlocked: 1, currentLevel: 0, best: {}, stars: {}, daily: {}, endlessBest: 0, achievements: {} };
   }
 }
 
@@ -584,6 +600,178 @@ function completedLevelsCount() {
   return Object.keys(progress.best || {}).length;
 }
 
+function dateKeyOffset(dateKey, offsetDays) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year, month - 1, day, 12, 0, 0);
+  date.setDate(date.getDate() + offsetDays);
+  const nextYear = date.getFullYear();
+  const nextMonth = String(date.getMonth() + 1).padStart(2, "0");
+  const nextDay = String(date.getDate()).padStart(2, "0");
+  return `${nextYear}-${nextMonth}-${nextDay}`;
+}
+
+function currentDailyStreak() {
+  const completed = new Set(Object.keys(progress.daily || {}));
+  if (!completed.size) return 0;
+
+  const today = localDateKey();
+  let anchor = completed.has(today) ? today : dateKeyOffset(today, -1);
+  let streak = 0;
+
+  while (completed.has(anchor)) {
+    streak += 1;
+    anchor = dateKeyOffset(anchor, -1);
+  }
+
+  return streak;
+}
+
+function bestDailyStreak() {
+  const dates = Object.keys(progress.daily || {}).sort();
+  if (!dates.length) return 0;
+
+  let best = 1;
+  let run = 1;
+
+  for (let i = 1; i < dates.length; i += 1) {
+    if (dates[i] === dateKeyOffset(dates[i - 1], 1)) {
+      run += 1;
+    } else {
+      run = 1;
+    }
+    best = Math.max(best, run);
+  }
+
+  return best;
+}
+
+function worldStats(world) {
+  let cleared = 0;
+  let stars = 0;
+  const total = world.end - world.start + 1;
+
+  for (let number = world.start; number <= world.end; number += 1) {
+    const index = number - 1;
+    if (progress.best[String(index)]) cleared += 1;
+    stars += Number(progress.stars[String(index)]) || 0;
+  }
+
+  return { cleared, stars, total, complete: cleared === total };
+}
+
+function completedWorldsCount() {
+  return WORLD_DEFS.filter(world => worldStats(world).complete).length;
+}
+
+const ACHIEVEMENTS = [
+  { id: "first_light", icon: "💡", title: "First Light", copy: "Complete your first campaign level.", test: () => completedLevelsCount() >= 1 },
+  { id: "level_10", icon: "⚡", title: "Getting Charged", copy: "Complete 10 campaign levels.", test: () => completedLevelsCount() >= 10 },
+  { id: "level_50", icon: "🔌", title: "Circuit Runner", copy: "Complete 50 campaign levels.", test: () => completedLevelsCount() >= 50 },
+  { id: "level_100", icon: "💯", title: "Century Power", copy: "Complete 100 campaign levels.", test: () => completedLevelsCount() >= 100 },
+  { id: "star_100", icon: "⭐", title: "Star Collector", copy: "Collect 100 campaign stars.", test: () => totalEarnedStars() >= 100 },
+  { id: "perfect_25", icon: "🌟", title: "Precision Engineer", copy: "Earn 3 stars on 25 campaign levels.", test: () => Object.values(progress.stars || {}).filter(value => Number(value) === 3).length >= 25 },
+  { id: "world_1", icon: "🌍", title: "World Conqueror", copy: "Complete your first full world.", test: () => completedWorldsCount() >= 1 },
+  { id: "daily_1", icon: "☀️", title: "Daily Spark", copy: "Complete your first Daily Challenge.", test: () => Object.keys(progress.daily || {}).length >= 1 },
+  { id: "streak_3", icon: "🔥", title: "On Fire", copy: "Reach a 3-day Daily Challenge streak.", test: () => bestDailyStreak() >= 3 },
+  { id: "streak_7", icon: "🔥", title: "Week of Power", copy: "Reach a 7-day Daily Challenge streak.", test: () => bestDailyStreak() >= 7 },
+  { id: "endless_10", icon: "∞", title: "Infinite Current", copy: "Clear 10 puzzles in one Endless run.", test: () => (progress.endlessBest || 0) >= 10 },
+  { id: "all_500", icon: "👑", title: "Light Jalao Master", copy: "Complete all 500 campaign levels.", test: () => completedLevelsCount() >= 500 }
+];
+
+function unlockedAchievementCount() {
+  return ACHIEVEMENTS.filter(achievement => Boolean(progress.achievements[achievement.id])).length;
+}
+
+let achievementToastTimer = null;
+
+function showAchievementToast(achievement, extraCount = 0) {
+  if (!achievement) return;
+
+  achievementToastIcon.textContent = achievement.icon;
+  achievementToastTitle.textContent = extraCount > 0
+    ? `${achievement.title} +${extraCount} more`
+    : achievement.title;
+  achievementToastCopy.textContent = achievement.copy;
+  achievementToast.classList.remove("hidden");
+
+  window.clearTimeout(achievementToastTimer);
+  achievementToastTimer = window.setTimeout(() => {
+    achievementToast.classList.add("hidden");
+  }, 3800);
+}
+
+function evaluateAchievements(showToast = false) {
+  const unlockedNow = [];
+
+  ACHIEVEMENTS.forEach(achievement => {
+    if (!progress.achievements[achievement.id] && achievement.test()) {
+      progress.achievements[achievement.id] = Date.now();
+      unlockedNow.push(achievement);
+    }
+  });
+
+  if (showToast && unlockedNow.length) {
+    showAchievementToast(unlockedNow[0], unlockedNow.length - 1);
+  }
+
+  return unlockedNow;
+}
+
+function renderAchievements() {
+  evaluateAchievements(false);
+  const unlocked = unlockedAchievementCount();
+
+  achievementModalSummary.textContent = `${unlocked} of ${ACHIEVEMENTS.length} achievements unlocked.`;
+  achievementCount.textContent = `${unlocked} / ${ACHIEVEMENTS.length} unlocked`;
+  achievementsGrid.innerHTML = "";
+
+  ACHIEVEMENTS.forEach(achievement => {
+    const isUnlocked = Boolean(progress.achievements[achievement.id]);
+    const card = document.createElement("div");
+    card.className = `achievement-card ${isUnlocked ? "unlocked" : ""}`;
+    card.innerHTML = `
+      <span class="achievement-icon">${isUnlocked ? achievement.icon : "🔒"}</span>
+      <strong>${achievement.title}</strong>
+      <p>${achievement.copy}</p>
+      <small>${isUnlocked ? "Unlocked" : "Locked"}</small>
+    `;
+    achievementsGrid.appendChild(card);
+  });
+}
+
+function renderWorldProgress() {
+  const completedWorlds = completedWorldsCount();
+  const totalStars = totalEarnedStars();
+  const streak = currentDailyStreak();
+
+  journeySummary.textContent = `${completedWorlds} / ${WORLD_DEFS.length} worlds`;
+  journeyCleared.textContent = completedLevelsCount();
+  journeyStars.textContent = totalStars;
+  journeyStreak.textContent = streak;
+  worldProgressList.innerHTML = "";
+
+  WORLD_DEFS.forEach((world, index) => {
+    const stats = worldStats(world);
+    const percent = Math.round((stats.cleared / stats.total) * 100);
+    const card = document.createElement("div");
+    card.className = `world-progress-card ${stats.complete ? "complete" : ""}`;
+    card.dataset.world = world.key;
+    card.innerHTML = `
+      <div class="world-progress-node">${stats.complete ? "✓" : index + 1}</div>
+      <div class="world-progress-copy">
+        <strong>${world.name}</strong>
+        <small>Levels ${world.start}–${world.end}</small>
+        <div class="world-progress-bar"><i style="width:${percent}%"></i></div>
+      </div>
+      <div class="world-progress-meta">
+        <b>${stats.cleared}/${stats.total}</b>
+        <span>⭐ ${stats.stars}</span>
+      </div>
+    `;
+    worldProgressList.appendChild(card);
+  });
+}
+
 function updateHomeScreen() {
   const level = LEVELS[currentLevel];
   const completed = completedLevelsCount();
@@ -595,10 +783,13 @@ function updateHomeScreen() {
   homeLevel.textContent = `Level ${nextNumber} / ${LEVELS.length}`;
   homeStars.textContent = totalEarnedStars();
   homeCompleted.textContent = completed;
+  homeStreak.textContent = currentDailyStreak();
   homeProgressFill.style.width = `${Math.max(1, (completed / LEVELS.length) * 100)}%`;
   continueLabel.textContent = completed === 0 ? "Start Level 1" : `Level ${nextNumber} • ${level.worldName}`;
   dailyStatus.textContent = dailyRecord ? `✓ Completed • ${dailyRecord.stars || 1}★` : "New puzzle today";
   endlessStatus.textContent = `Best run: ${progress.endlessBest || 0}`;
+  renderWorldProgress();
+  renderAchievements();
 }
 
 function showHome() {
@@ -1208,6 +1399,7 @@ function completeLevel() {
     nextBtn.textContent = "Next Endless →";
   }
 
+  evaluateAchievements(true);
   saveProgress();
   renderWinStars(earnedStars);
   updateHomeScreen();
@@ -1351,6 +1543,15 @@ homeLevelsBtn.addEventListener("click", () => showModal("levelsModal"));
 homeHelpBtn.addEventListener("click", () => showModal("helpModal"));
 dailyBtn.addEventListener("click", startDailyChallenge);
 endlessBtn.addEventListener("click", startEndlessMode);
+journeyBtn.addEventListener("click", () => {
+  renderWorldProgress();
+  showModal("journeyModal");
+});
+achievementsBtn.addEventListener("click", () => {
+  renderAchievements();
+  saveProgress();
+  showModal("achievementsModal");
+});
 levelsBtn.addEventListener("click", () => showModal("levelsModal"));
 
 soundBtn.addEventListener("click", () => {
@@ -1412,9 +1613,13 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
     hideModal("helpModal");
     hideModal("levelsModal");
+    hideModal("journeyModal");
+    hideModal("achievementsModal");
   }
 });
 
 buildLevel(currentLevel);
+evaluateAchievements(false);
+saveProgress();
 updateHomeScreen();
 showHome();
