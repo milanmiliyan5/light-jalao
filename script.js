@@ -11,16 +11,30 @@ const DIRS = [
 ];
 
 const LEVELS = [
-  { size: 3, seed: 101 }, { size: 3, seed: 211 },
-  { size: 3, seed: 307 }, { size: 3, seed: 419 },
-  { size: 4, seed: 523 }, { size: 4, seed: 631 },
-  { size: 4, seed: 743 }, { size: 4, seed: 857 },
-  { size: 4, seed: 967 }, { size: 4, seed: 1087 },
-  { size: 4, seed: 1201 }, { size: 4, seed: 1327 },
-  { size: 5, seed: 1451 }, { size: 5, seed: 1597 },
-  { size: 5, seed: 1723 }, { size: 5, seed: 1871 },
-  { size: 5, seed: 1999 }, { size: 5, seed: 2131 },
-  { size: 5, seed: 2269 }, { size: 5, seed: 2411 }
+  { size: 3, seed: 101, mode: "Starter Circuit", rule: "Learn the current flow", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
+  { size: 3, seed: 211, mode: "Starter Circuit", rule: "Corners and straight wires", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
+  { size: 3, seed: 307, mode: "Starter Circuit", rule: "Power more than one bulb", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
+  { size: 3, seed: 419, mode: "Starter Circuit", rule: "Longer routes begin", minBulbs: 2, branchy: false, fixed: 0, blockers: 0 },
+
+  { size: 4, seed: 523, mode: "Branch Circuit", rule: "T-junctions split the power", minBulbs: 3, branchy: true, fixed: 0, blockers: 0 },
+  { size: 4, seed: 631, mode: "Branch Circuit", rule: "Three bulbs, one circuit", minBulbs: 3, branchy: true, fixed: 0, blockers: 0 },
+  { size: 4, seed: 743, mode: "Branch Circuit", rule: "Follow every branch", minBulbs: 3, branchy: true, fixed: 0, blockers: 0 },
+  { size: 4, seed: 857, mode: "Branch Circuit", rule: "Denser junction puzzle", minBulbs: 4, branchy: true, fixed: 0, blockers: 0 },
+
+  { size: 4, seed: 967, mode: "Locked Wires", rule: "Blue locks cannot rotate", minBulbs: 3, branchy: true, fixed: 1, blockers: 0 },
+  { size: 4, seed: 1087, mode: "Locked Wires", rule: "Use fixed wires as clues", minBulbs: 3, branchy: true, fixed: 1, blockers: 0 },
+  { size: 4, seed: 1201, mode: "Locked Wires", rule: "Two fixed pieces guide the route", minBulbs: 4, branchy: true, fixed: 2, blockers: 0 },
+  { size: 4, seed: 1327, mode: "Locked Wires", rule: "Plan around locked junctions", minBulbs: 4, branchy: true, fixed: 2, blockers: 0 },
+
+  { size: 5, seed: 1451, mode: "Obstacle Grid", rule: "Route around blocked cells", minBulbs: 4, branchy: true, fixed: 1, blockers: 1 },
+  { size: 5, seed: 1597, mode: "Obstacle Grid", rule: "More walls change the route", minBulbs: 4, branchy: true, fixed: 1, blockers: 2 },
+  { size: 5, seed: 1723, mode: "Obstacle Grid", rule: "Locks and walls combine", minBulbs: 4, branchy: true, fixed: 2, blockers: 2 },
+  { size: 5, seed: 1871, mode: "Obstacle Grid", rule: "Tight paths, more branches", minBulbs: 5, branchy: true, fixed: 2, blockers: 3 },
+
+  { size: 5, seed: 1999, mode: "Master Circuit", rule: "Everything combines now", minBulbs: 5, branchy: true, fixed: 2, blockers: 2 },
+  { size: 5, seed: 2131, mode: "Master Circuit", rule: "Read the circuit before rotating", minBulbs: 5, branchy: true, fixed: 3, blockers: 2 },
+  { size: 5, seed: 2269, mode: "Master Circuit", rule: "Heavy branching challenge", minBulbs: 5, branchy: true, fixed: 3, blockers: 3 },
+  { size: 5, seed: 2411, mode: "Master Circuit", rule: "Final mixed circuit", minBulbs: 6, branchy: true, fixed: 3, blockers: 3 }
 ];
 
 const STORAGE_KEY = "lightJalaoWireProgressV1";
@@ -34,6 +48,8 @@ const bestText = document.getElementById("bestText");
 const timeText = document.getElementById("timeText");
 const statusText = document.getElementById("statusText");
 const levelProgressFill = document.getElementById("levelProgressFill");
+const challengeBadge = document.getElementById("challengeBadge");
+const challengeRule = document.getElementById("challengeRule");
 const missionBulb = document.getElementById("missionBulb");
 const restartBtn = document.getElementById("restartBtn");
 const hintBtn = document.getElementById("hintBtn");
@@ -52,6 +68,8 @@ let rotations = [];
 let startRotations = [];
 let powered = new Set();
 let bulbs = [];
+let fixedTiles = new Set();
+let blockedCells = new Set();
 let moves = 0;
 let elapsed = 0;
 let timer = null;
@@ -108,39 +126,184 @@ function bitCount(mask) {
   return count;
 }
 
-function generateTree(size, seed) {
-  const random = rngFromSeed(seed);
-  const masks = Array(size * size).fill(0);
-  const visited = Array(size * size).fill(false);
-  const stack = [0];
-  visited[0] = true;
+function isGridConnected(size, blocked) {
+  if (blocked.has(0)) return false;
 
-  while (stack.length) {
-    const current = stack[stack.length - 1];
+  const activeCount = size * size - blocked.size;
+  const seen = new Set([0]);
+  const queue = [0];
+
+  while (queue.length) {
+    const current = queue.shift();
     const [row, col] = rowCol(current, size);
-    const choices = [];
 
     for (const dir of DIRS) {
       const nr = row + dir.dr;
       const nc = col + dir.dc;
       if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
+
       const next = indexOf(nr, nc, size);
-      if (!visited[next]) choices.push({ ...dir, next });
+      if (blocked.has(next) || seen.has(next)) continue;
+      seen.add(next);
+      queue.push(next);
+    }
+  }
+
+  return seen.size === activeCount;
+}
+
+function makeBlockedCells(size, count, seed) {
+  const blocked = new Set();
+  if (!count) return blocked;
+
+  const random = rngFromSeed(seed * 29 + 17);
+  const candidates = [];
+
+  for (let index = 1; index < size * size; index += 1) {
+    const [row, col] = rowCol(index, size);
+    if (row === 0 && col === 1) continue;
+    if (row === 1 && col === 0) continue;
+    candidates.push(index);
+  }
+
+  for (let i = candidates.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+
+  for (const candidate of candidates) {
+    if (blocked.size >= count) break;
+    blocked.add(candidate);
+    if (!isGridConnected(size, blocked)) blocked.delete(candidate);
+  }
+
+  return blocked;
+}
+
+function generateTree(size, seed, blocked = new Set(), branchy = false) {
+  const random = rngFromSeed(seed);
+  const masks = Array(size * size).fill(0);
+  const visited = new Set([0]);
+
+  if (!branchy) {
+    const stack = [0];
+
+    while (stack.length) {
+      const current = stack[stack.length - 1];
+      const [row, col] = rowCol(current, size);
+      const choices = [];
+
+      for (const dir of DIRS) {
+        const nr = row + dir.dr;
+        const nc = col + dir.dc;
+        if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
+        const next = indexOf(nr, nc, size);
+        if (blocked.has(next) || visited.has(next)) continue;
+        choices.push({ ...dir, next });
+      }
+
+      if (!choices.length) {
+        stack.pop();
+        continue;
+      }
+
+      const choice = choices[Math.floor(random() * choices.length)];
+      masks[current] |= choice.bit;
+      masks[choice.next] |= choice.opposite;
+      visited.add(choice.next);
+      stack.push(choice.next);
     }
 
-    if (!choices.length) {
-      stack.pop();
-      continue;
-    }
+    return masks;
+  }
 
-    const choice = choices[Math.floor(random() * choices.length)];
-    masks[current] |= choice.bit;
-    masks[choice.next] |= choice.opposite;
-    visited[choice.next] = true;
-    stack.push(choice.next);
+  const frontier = [];
+
+  function addFrontier(from) {
+    const [row, col] = rowCol(from, size);
+    for (const dir of DIRS) {
+      const nr = row + dir.dr;
+      const nc = col + dir.dc;
+      if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
+      const next = indexOf(nr, nc, size);
+      if (blocked.has(next) || visited.has(next)) continue;
+      frontier.push({ from, ...dir, next });
+    }
+  }
+
+  addFrontier(0);
+
+  while (frontier.length) {
+    const pick = Math.floor(random() * frontier.length);
+    const edge = frontier.splice(pick, 1)[0];
+    if (visited.has(edge.next)) continue;
+
+    masks[edge.from] |= edge.bit;
+    masks[edge.next] |= edge.opposite;
+    visited.add(edge.next);
+    addFrontier(edge.next);
   }
 
   return masks;
+}
+
+function treeScore(masks) {
+  let leaves = 0;
+  let junctions = 0;
+
+  masks.forEach((mask, index) => {
+    if (index === 0 || mask === 0) return;
+    const degree = bitCount(mask);
+    if (degree === 1) leaves += 1;
+    if (degree >= 3) junctions += 1;
+  });
+
+  return { leaves, junctions, score: leaves * 10 + junctions * 3 };
+}
+
+function generateBestTree(level, blocked) {
+  let best = null;
+  const attempts = level.branchy ? 36 : 18;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const masks = generateTree(
+      level.size,
+      level.seed + attempt * 97,
+      blocked,
+      level.branchy
+    );
+    const score = treeScore(masks);
+
+    if (!best || score.score > best.score.score) {
+      best = { masks, score };
+    }
+
+    if (score.leaves >= level.minBulbs && (!level.branchy || score.junctions >= 1)) {
+      return masks;
+    }
+  }
+
+  return best.masks;
+}
+
+function chooseFixedTiles(level) {
+  const random = rngFromSeed(level.seed * 41 + 19);
+  const candidates = solvedMasks
+    .map((mask, index) => ({ mask, index }))
+    .filter(({ mask, index }) =>
+      index !== 0 &&
+      mask !== 0 &&
+      !bulbs.includes(index) &&
+      bitCount(mask) >= 2
+    )
+    .map(item => item.index);
+
+  for (let i = candidates.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+
+  return new Set(candidates.slice(0, level.fixed || 0));
 }
 
 function rotateMask(mask, turns) {
@@ -167,7 +330,13 @@ function masksEquivalent(a, b) {
 function makeScramble(size, seed) {
   const random = rngFromSeed(seed * 17 + 73);
   const result = solvedMasks.map((mask, index) => {
-    if (index === 0 || mask === 15) return 0;
+    if (
+      index === 0 ||
+      mask === 0 ||
+      mask === 15 ||
+      fixedTiles.has(index) ||
+      blockedCells.has(index)
+    ) return 0;
 
     let turns = 1 + Math.floor(random() * 3);
     if ((mask === (N | S) || mask === (E | W)) && turns === 2) turns = 1;
@@ -175,10 +344,20 @@ function makeScramble(size, seed) {
   });
 
   const alreadySolved = result.every((turns, index) =>
+    blockedCells.has(index) ||
     masksEquivalent(rotateMask(solvedMasks[index], turns), solvedMasks[index])
   );
 
-  if (alreadySolved && result.length > 1) result[1] = 1;
+  if (alreadySolved) {
+    const fallback = solvedMasks.findIndex((mask, index) =>
+      index !== 0 &&
+      mask !== 0 &&
+      !fixedTiles.has(index) &&
+      !blockedCells.has(index)
+    );
+    if (fallback >= 0) result[fallback] = 1;
+  }
+
   return result;
 }
 
@@ -191,21 +370,39 @@ function buildLevel(levelIndex) {
   timerStarted = false;
 
   const level = LEVELS[currentLevel];
-  solvedMasks = generateTree(level.size, level.seed);
+  blockedCells = makeBlockedCells(level.size, level.blockers || 0, level.seed);
+  solvedMasks = generateBestTree(level, blockedCells);
   bulbs = solvedMasks
     .map((mask, index) => ({ mask, index }))
-    .filter(item => item.index !== 0 && bitCount(item.mask) === 1)
+    .filter(item =>
+      item.index !== 0 &&
+      item.mask !== 0 &&
+      !blockedCells.has(item.index) &&
+      bitCount(item.mask) === 1
+    )
     .map(item => item.index);
 
+  fixedTiles = chooseFixedTiles(level);
   rotations = makeScramble(level.size, level.seed);
   startRotations = [...rotations];
 
   levelText.textContent = `Level ${currentLevel + 1}`;
+  challengeBadge.textContent = level.mode;
+  challengeRule.textContent = level.rule;
   movesText.textContent = "0";
   timeText.textContent = "00:00";
   bestText.textContent = progress.best[String(currentLevel)]?.moves ?? "—";
   levelProgressFill.style.width = `${((currentLevel + 1) / LEVELS.length) * 100}%`;
-  statusText.textContent = "Tap a tile to rotate the wire. Connect the power source to every bulb.";
+
+  if (level.blockers) {
+    statusText.textContent = "Blocked cells cannot carry wires. Route the circuit around them.";
+  } else if (level.fixed) {
+    statusText.textContent = "Blue locked wires are fixed in place — use them as clues.";
+  } else if (level.branchy) {
+    statusText.textContent = "Power splits at junctions. Make every branch reach a bulb.";
+  } else {
+    statusText.textContent = "Tap a tile to rotate the wire. Connect the power source to every bulb.";
+  }
 
   boardEl.style.setProperty("--size", level.size);
   renderBoard();
@@ -221,22 +418,41 @@ function renderBoard() {
   solvedMasks.forEach((mask, index) => {
     const [row, col] = rowCol(index, size);
     const tile = document.createElement("button");
+    const isBlocked = blockedCells.has(index);
     const isSource = index === 0;
     const isBulb = bulbs.includes(index);
+    const isFixed = fixedTiles.has(index);
 
     tile.type = "button";
+    tile.dataset.index = index;
+    tile.setAttribute("role", "gridcell");
+
+    if (isBlocked) {
+      tile.className = "tile obstacle-tile";
+      tile.disabled = true;
+      tile.setAttribute("aria-label", `Blocked cell at row ${row + 1}, column ${col + 1}`);
+      const mark = document.createElement("span");
+      mark.className = "obstacle-mark";
+      mark.textContent = "×";
+      tile.appendChild(mark);
+      boardEl.appendChild(tile);
+      return;
+    }
+
     tile.className = [
       "tile",
       isSource ? "source-tile" : "",
-      isBulb ? "leaf bulb-tile" : ""
+      isBulb ? "leaf bulb-tile" : "",
+      isFixed ? "fixed-tile" : ""
     ].filter(Boolean).join(" ");
-    tile.dataset.index = index;
-    tile.setAttribute("role", "gridcell");
+
     tile.setAttribute("aria-label", isSource
       ? "Power source"
       : isBulb
         ? `Bulb wire at row ${row + 1}, column ${col + 1}`
-        : `Wire tile at row ${row + 1}, column ${col + 1}`);
+        : isFixed
+          ? `Locked wire at row ${row + 1}, column ${col + 1}`
+          : `Wire tile at row ${row + 1}, column ${col + 1}`);
 
     const rotor = document.createElement("div");
     rotor.className = "wire-rotor";
@@ -267,7 +483,13 @@ function renderBoard() {
       tile.appendChild(bulb);
     }
 
-    if (!isSource) {
+    if (isFixed) {
+      const lock = document.createElement("span");
+      lock.className = "lock-device";
+      lock.setAttribute("aria-hidden", "true");
+      tile.appendChild(lock);
+      tile.disabled = true;
+    } else if (!isSource) {
       tile.addEventListener("click", () => rotateTile(index));
     }
 
@@ -279,7 +501,7 @@ function renderBoard() {
 }
 
 function rotateTile(index) {
-  if (locked || index === 0) return;
+  if (locked || index === 0 || fixedTiles.has(index) || blockedCells.has(index)) return;
 
   startTimer();
   rotations[index] = (rotations[index] + 1) % 4;
@@ -425,11 +647,19 @@ function showHint() {
     }
   }
 
-  target = frontier.find(index => currentMask(index) !== solvedMasks[index]);
+  target = frontier.find(index =>
+    !fixedTiles.has(index) &&
+    !blockedCells.has(index) &&
+    currentMask(index) !== solvedMasks[index]
+  );
 
   if (target === undefined || target === null) {
     target = solvedMasks.findIndex((mask, index) =>
-      index !== 0 && currentMask(index) !== mask
+      index !== 0 &&
+      mask !== 0 &&
+      !fixedTiles.has(index) &&
+      !blockedCells.has(index) &&
+      currentMask(index) !== mask
     );
   }
 
@@ -499,7 +729,7 @@ function renderLevels() {
     button.textContent = unlocked ? number : "🔒";
     button.disabled = !unlocked;
     button.setAttribute("aria-label", unlocked
-      ? `Level ${number}, ${level.size} by ${level.size}`
+      ? `Level ${number}, ${level.size} by ${level.size}, ${level.mode}`
       : `Level ${number} locked`);
 
     if (unlocked) {
