@@ -235,6 +235,10 @@ const homeLevel = document.getElementById("homeLevel");
 const homeStars = document.getElementById("homeStars");
 const homeCompleted = document.getElementById("homeCompleted");
 const homeProgressFill = document.getElementById("homeProgressFill");
+const dailyBtn = document.getElementById("dailyBtn");
+const endlessBtn = document.getElementById("endlessBtn");
+const dailyStatus = document.getElementById("dailyStatus");
+const endlessStatus = document.getElementById("endlessStatus");
 
 let currentLevel = 0;
 let solvedMasks = [];
@@ -252,6 +256,12 @@ let locked = false;
 let soundEnabled = true;
 let audioContext = null;
 let parMoves = 0;
+let gameMode = "campaign";
+let activeLevel = null;
+let activePuzzleCounted = false;
+let activeDailyKey = "";
+let endlessRun = 0;
+let endlessSeedBase = 0;
 
 const progress = loadProgress();
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
@@ -263,10 +273,12 @@ function loadProgress() {
       unlocked: Math.max(1, Number(raw.unlocked) || 1),
       currentLevel: Number(raw.currentLevel) || 0,
       best: raw.best && typeof raw.best === "object" ? raw.best : {},
-      stars: raw.stars && typeof raw.stars === "object" ? raw.stars : {}
+      stars: raw.stars && typeof raw.stars === "object" ? raw.stars : {},
+      daily: raw.daily && typeof raw.daily === "object" ? raw.daily : {},
+      endlessBest: Math.max(0, Number(raw.endlessBest) || 0)
     };
   } catch {
-    return { unlocked: 1, currentLevel: 0, best: {}, stars: {} };
+    return { unlocked: 1, currentLevel: 0, best: {}, stars: {}, daily: {}, endlessBest: 0 };
   }
 }
 
@@ -576,6 +588,8 @@ function updateHomeScreen() {
   const level = LEVELS[currentLevel];
   const completed = completedLevelsCount();
   const nextNumber = Math.min(currentLevel + 1, LEVELS.length);
+  const today = localDateKey();
+  const dailyRecord = progress.daily[today];
 
   homeWorld.textContent = level.worldName;
   homeLevel.textContent = `Level ${nextNumber} / ${LEVELS.length}`;
@@ -583,11 +597,14 @@ function updateHomeScreen() {
   homeCompleted.textContent = completed;
   homeProgressFill.style.width = `${Math.max(1, (completed / LEVELS.length) * 100)}%`;
   continueLabel.textContent = completed === 0 ? "Start Level 1" : `Level ${nextNumber} • ${level.worldName}`;
+  dailyStatus.textContent = dailyRecord ? `✓ Completed • ${dailyRecord.stars || 1}★` : "New puzzle today";
+  endlessStatus.textContent = `Best run: ${progress.endlessBest || 0}`;
 }
 
 function showHome() {
   stopTimer();
   timerStarted = false;
+  applyWorldTheme(LEVELS[currentLevel]);
   updateHomeScreen();
   homeScreen.classList.remove("hidden");
 }
@@ -609,6 +626,77 @@ function renderWinStars(stars) {
       : "Circuit cleared! 1 star";
 }
 
+function localDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function makeDailyLevel(dateKey = localDateKey()) {
+  const seed = hashString(`light-jalao-daily-${dateKey}`);
+  return {
+    number: 0,
+    size: seed % 4 === 0 ? 6 : 5,
+    seed,
+    mode: "Daily Challenge",
+    rule: "One fresh circuit for today",
+    minBulbs: 5 + ((seed >>> 7) % 3),
+    branchy: true,
+    fixed: 2 + (seed % 3),
+    blockers: 2 + ((seed >>> 4) % 3),
+    world: "daily",
+    worldName: "Daily Pulse",
+    tagline: "DAILY PULSE • TODAY'S CIRCUIT"
+  };
+}
+
+function makeEndlessLevel(step, seedBase) {
+  const stepNumber = Math.max(1, step);
+  const seed = (seedBase + Math.imul(stepNumber, 2654435761)) >>> 0;
+  const size = stepNumber <= 2 ? 4 : stepNumber <= 6 ? 5 : 6;
+  const ramp = Math.min(10, Math.floor((stepNumber - 1) / 2));
+  return {
+    number: stepNumber,
+    size,
+    seed,
+    mode: "Endless Mode",
+    rule: `Puzzle ${stepNumber} • difficulty rises after every clear`,
+    minBulbs: Math.min(10, 3 + ramp),
+    branchy: true,
+    fixed: Math.min(8, 1 + ramp),
+    blockers: Math.min(7, Math.floor(ramp * .8)),
+    world: "endless",
+    worldName: "Infinity Run",
+    tagline: "ENDLESS • KEEP THE CIRCUIT ALIVE"
+  };
+}
+
+function startDailyChallenge() {
+  activeDailyKey = localDateKey();
+  activePuzzleCounted = false;
+  loadPuzzle(makeDailyLevel(activeDailyKey), "daily");
+  hideHome();
+}
+
+function startEndlessMode() {
+  endlessRun = 0;
+  endlessSeedBase = (Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0;
+  activePuzzleCounted = false;
+  loadPuzzle(makeEndlessLevel(1, endlessSeedBase), "endless");
+  hideHome();
+}
+
 function applyWorldTheme(level) {
   document.body.dataset.world = level.world;
   brandTagline.textContent = level.tagline;
@@ -627,7 +715,9 @@ function applyWorldTheme(level) {
     plasma: "#1c0818",
     retro: "#16100a",
     void: "#090914",
-    infinity: "#160b18"
+    infinity: "#160b18",
+    daily: "#061b24",
+    endless: "#180b22"
   };
 
   if (metaTheme) metaTheme.setAttribute("content", themeColors[level.world] || "#071018");
@@ -640,26 +730,21 @@ function applyWorldTheme(level) {
   }
 }
 
-function buildLevel(levelIndex) {
+function loadPuzzle(level, mode = "campaign") {
   stopTimer();
-  currentLevel = levelIndex;
   moves = 0;
   elapsed = 0;
   locked = false;
   timerStarted = false;
+  activeLevel = level;
+  gameMode = mode;
 
-  const level = LEVELS[currentLevel];
   applyWorldTheme(level);
   blockedCells = makeBlockedCells(level.size, level.blockers || 0, level.seed);
   solvedMasks = generateBestTree(level, blockedCells);
   bulbs = solvedMasks
     .map((mask, index) => ({ mask, index }))
-    .filter(item =>
-      item.index !== 0 &&
-      item.mask !== 0 &&
-      !blockedCells.has(item.index) &&
-      bitCount(item.mask) === 1
-    )
+    .filter(item => item.index !== 0 && item.mask !== 0 && !blockedCells.has(item.index) && bitCount(item.mask) === 1)
     .map(item => item.index);
 
   fixedTiles = chooseFixedTiles(level);
@@ -667,39 +752,62 @@ function buildLevel(levelIndex) {
   startRotations = [...rotations];
   parMoves = calculatePar();
 
-  levelText.textContent = `Level ${currentLevel + 1}`;
-  challengeBadge.textContent = `${level.worldName} • ${level.mode}`;
-  challengeRule.textContent = level.rule;
   movesText.textContent = "0";
   timeText.textContent = "00:00";
-  bestText.textContent = progress.best[String(currentLevel)]?.moves ?? "—";
-  levelProgressFill.style.width = `${((currentLevel + 1) / LEVELS.length) * 100}%`;
+  challengeBadge.textContent = `${level.worldName} • ${level.mode}`;
+  challengeRule.textContent = level.rule;
 
-  if (currentLevel >= 475) {
-    statusText.textContent = "Final Infinity: every clue matters. Read the full network before touching a wire.";
-  } else if (currentLevel >= 90 && currentLevel < 100) {
-    statusText.textContent = "Final Reactor: read the whole network first. Locks and walls leave little room for mistakes.";
-  } else if (level.blockers && level.fixed) {
-    statusText.textContent = "Locked clues and blocked cells combine — plan the route before rotating.";
-  } else if (level.blockers) {
-    statusText.textContent = "Blocked cells cannot carry wires. Route the circuit around them.";
-  } else if (level.fixed) {
-    statusText.textContent = "Blue locked wires are fixed in place — use them as clues.";
-  } else if (level.branchy) {
-    statusText.textContent = "Power splits at junctions. Make every branch reach a bulb.";
+  if (mode === "campaign") {
+    levelText.textContent = `Level ${currentLevel + 1}`;
+    bestText.textContent = progress.best[String(currentLevel)]?.moves ?? "—";
+    levelProgressFill.style.width = `${((currentLevel + 1) / LEVELS.length) * 100}%`;
+
+    if (currentLevel >= 475) {
+      statusText.textContent = "Final Infinity: every clue matters. Read the full network before touching a wire.";
+    } else if (currentLevel >= 90 && currentLevel < 100) {
+      statusText.textContent = "Final Reactor: read the whole network first. Locks and walls leave little room for mistakes.";
+    } else if (level.blockers && level.fixed) {
+      statusText.textContent = "Locked clues and blocked cells combine — plan the route before rotating.";
+    } else if (level.blockers) {
+      statusText.textContent = "Blocked cells cannot carry wires. Route the circuit around them.";
+    } else if (level.fixed) {
+      statusText.textContent = "Blue locked wires are fixed in place — use them as clues.";
+    } else if (level.branchy) {
+      statusText.textContent = "Power splits at junctions. Make every branch reach a bulb.";
+    } else {
+      statusText.textContent = "Tap a tile to rotate the wire. Connect the power source to every bulb.";
+    }
+  } else if (mode === "daily") {
+    const record = progress.daily[activeDailyKey];
+    levelText.textContent = "Daily Challenge";
+    bestText.textContent = record?.moves ?? "—";
+    levelProgressFill.style.width = "100%";
+    statusText.textContent = "Today's puzzle: complete the circuit and earn up to 3 stars.";
   } else {
-    statusText.textContent = "Tap a tile to rotate the wire. Connect the power source to every bulb.";
+    levelText.textContent = `Endless #${endlessRun + 1}`;
+    bestText.textContent = progress.endlessBest ? `Run ${progress.endlessBest}` : "—";
+    levelProgressFill.style.width = `${Math.min(100, 18 + endlessRun * 7)}%`;
+    statusText.textContent = `Endless run: ${endlessRun} cleared. The next circuit gets harder.`;
   }
 
   boardEl.style.setProperty("--size", level.size);
   renderBoard();
   updatePower();
-  renderLevels();
-  saveProgress();
+
+  if (mode === "campaign") {
+    renderLevels();
+    saveProgress();
+  }
+}
+
+function buildLevel(levelIndex) {
+  currentLevel = levelIndex;
+  activePuzzleCounted = false;
+  loadPuzzle(LEVELS[currentLevel], "campaign");
 }
 
 function renderBoard() {
-  const size = LEVELS[currentLevel].size;
+  const size = activeLevel.size;
   boardEl.innerHTML = "";
 
   solvedMasks.forEach((mask, index) => {
@@ -811,7 +919,7 @@ function getTile(index) {
 }
 
 function connectedNeighbours(index) {
-  const size = LEVELS[currentLevel].size;
+  const size = activeLevel.size;
   const [row, col] = rowCol(index, size);
   const mask = currentMask(index);
   const found = [];
@@ -920,7 +1028,7 @@ function showHint() {
   const frontier = [];
 
   for (const index of powered) {
-    const size = LEVELS[currentLevel].size;
+    const size = activeLevel.size;
     const [row, col] = rowCol(index, size);
 
     for (const dir of DIRS) {
@@ -962,47 +1070,74 @@ function showHint() {
     tile.classList.add("hint");
   }
 
-  const [row, col] = rowCol(target, LEVELS[currentLevel].size);
+  const [row, col] = rowCol(target, activeLevel.size);
   statusText.textContent = `Hint: rotate the glowing tile at row ${row + 1}, column ${col + 1}.`;
   playTone(760, .08, .025);
   window.setTimeout(() => tile?.classList.remove("hint"), 1900);
 }
 
 function completeLevel() {
-  const key = String(currentLevel);
-  const oldBest = progress.best[key];
-  const newBest = !oldBest || moves < oldBest.moves || (moves === oldBest.moves && elapsed < oldBest.time);
-
-  if (newBest) {
-    progress.best[key] = { moves, time: elapsed };
-  }
-
   const earnedStars = ratingForMoves(moves);
-  progress.stars[key] = Math.max(Number(progress.stars[key]) || 0, earnedStars);
+  let newBest = false;
 
-  progress.unlocked = Math.max(progress.unlocked, Math.min(LEVELS.length, currentLevel + 2));
-  saveProgress();
-  renderLevels();
+  if (gameMode === "campaign") {
+    const key = String(currentLevel);
+    const oldBest = progress.best[key];
+    newBest = !oldBest || moves < oldBest.moves || (moves === oldBest.moves && elapsed < oldBest.time);
 
-  winTitle.textContent = currentLevel === LEVELS.length - 1
-    ? "Circuit Master! ✨"
-    : newBest
-      ? "New best! ✨"
-      : "Lights on! ✨";
+    if (newBest) {
+      progress.best[key] = { moves, time: elapsed };
+    }
 
-  const level = LEVELS[currentLevel];
-  const completedNumber = currentLevel + 1;
-  const worldFinished = completedNumber % 20 === 0;
+    progress.stars[key] = Math.max(Number(progress.stars[key]) || 0, earnedStars);
+    progress.unlocked = Math.max(progress.unlocked, Math.min(LEVELS.length, currentLevel + 2));
 
-  if (worldFinished && completedNumber < LEVELS.length) {
-    winTitle.textContent = `${level.worldName} complete! ✨`;
+    const completedNumber = currentLevel + 1;
+    const world = worldForLevel(completedNumber);
+    const worldFinished = completedNumber === world.end;
+
+    winTitle.textContent = currentLevel === LEVELS.length - 1
+      ? "Circuit Master! ✨"
+      : worldFinished
+        ? `${activeLevel.worldName} complete! ✨`
+        : newBest
+          ? "New best! ✨"
+          : "Lights on! ✨";
+
+    winCopy.textContent = `${activeLevel.worldName} • ${bulbs.length} bulbs • ${moves} moves • Par ${parMoves} • ${formatTime(elapsed)}`;
+    nextBtn.textContent = currentLevel === LEVELS.length - 1 ? "Play from Level 1 ↻" : "Next Level →";
+    renderLevels();
+  } else if (gameMode === "daily") {
+    const previous = progress.daily[activeDailyKey];
+    newBest = !previous || moves < previous.moves || (moves === previous.moves && elapsed < previous.time);
+
+    if (newBest) {
+      progress.daily[activeDailyKey] = { moves, time: elapsed, stars: earnedStars };
+    } else {
+      progress.daily[activeDailyKey] = {
+        ...previous,
+        stars: Math.max(Number(previous.stars) || 0, earnedStars)
+      };
+    }
+
+    winTitle.textContent = previous ? "Daily improved! ☀" : "Daily complete! ☀";
+    winCopy.textContent = `Today's circuit • ${moves} moves • Par ${parMoves} • ${formatTime(elapsed)}`;
+    nextBtn.textContent = "Back to Home →";
+  } else {
+    if (!activePuzzleCounted) {
+      endlessRun += 1;
+      activePuzzleCounted = true;
+      progress.endlessBest = Math.max(progress.endlessBest || 0, endlessRun);
+    }
+
+    winTitle.textContent = `Endless streak: ${endlessRun} ∞`;
+    winCopy.textContent = `Puzzle ${endlessRun} cleared • ${moves} moves • Par ${parMoves} • ${formatTime(elapsed)}`;
+    nextBtn.textContent = "Next Endless →";
   }
 
+  saveProgress();
   renderWinStars(earnedStars);
-  winCopy.textContent = `${level.worldName} • ${bulbs.length} bulbs • ${moves} moves • Par ${parMoves} • ${formatTime(elapsed)}`;
   updateHomeScreen();
-  nextBtn.textContent = currentLevel === LEVELS.length - 1 ? "Play from Level 1 ↻" : "Next Level →";
-
   makeConfetti();
   showModal("winModal");
   playWin();
@@ -1135,9 +1270,14 @@ restartBtn.addEventListener("click", restartLevel);
 hintBtn.addEventListener("click", showHint);
 helpBtn.addEventListener("click", () => showModal("helpModal"));
 homeBtn.addEventListener("click", showHome);
-continueBtn.addEventListener("click", hideHome);
+continueBtn.addEventListener("click", () => {
+  if (gameMode !== "campaign") buildLevel(currentLevel);
+  hideHome();
+});
 homeLevelsBtn.addEventListener("click", () => showModal("levelsModal"));
 homeHelpBtn.addEventListener("click", () => showModal("helpModal"));
+dailyBtn.addEventListener("click", startDailyChallenge);
+endlessBtn.addEventListener("click", startEndlessMode);
 levelsBtn.addEventListener("click", () => showModal("levelsModal"));
 
 soundBtn.addEventListener("click", () => {
@@ -1162,6 +1302,19 @@ document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
 
 nextBtn.addEventListener("click", () => {
   hideModal("winModal");
+
+  if (gameMode === "daily") {
+    showHome();
+    return;
+  }
+
+  if (gameMode === "endless") {
+    activePuzzleCounted = false;
+    loadPuzzle(makeEndlessLevel(endlessRun + 1, endlessSeedBase), "endless");
+    hideHome();
+    return;
+  }
+
   const next = currentLevel === LEVELS.length - 1 ? 0 : currentLevel + 1;
   buildLevel(next);
   hideHome();
@@ -1169,7 +1322,16 @@ nextBtn.addEventListener("click", () => {
 
 replayBtn.addEventListener("click", () => {
   hideModal("winModal");
-  buildLevel(currentLevel);
+
+  if (gameMode === "campaign") {
+    buildLevel(currentLevel);
+  } else {
+    const wasCounted = activePuzzleCounted;
+    const sameLevel = activeLevel;
+    loadPuzzle(sameLevel, gameMode);
+    activePuzzleCounted = wasCounted;
+  }
+
   hideHome();
 });
 
