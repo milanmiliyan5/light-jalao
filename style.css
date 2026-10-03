@@ -5401,3 +5401,104 @@ body.native-android .game-bottom-nav {
   margin:0;
   accent-color:#59e8ff;
 }
+
+
+/* ---------- Selectable background music themes ---------- */
+.music-theme-picker {
+  padding:10px;
+  border:1px solid rgba(210,240,255,.10);
+  border-radius:16px;
+  background:rgba(255,255,255,.025);
+}
+
+.music-theme-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.music-theme-head span {
+  color:#91afbc;
+  font-size:7px;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+
+.music-theme-head small {
+  color:#64818f;
+  font-size:7px;
+}
+
+.music-theme-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+
+.music-theme-card {
+  position:relative;
+  display:grid;
+  grid-template-columns:31px 1fr;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  min-height:56px;
+  padding:7px 25px 7px 7px;
+  border:1px solid rgba(210,240,255,.09);
+  border-radius:13px;
+  color:#eaf8fd;
+  background:rgba(255,255,255,.032);
+  text-align:left;
+}
+
+.music-theme-card > span {
+  display:grid;
+  place-items:center;
+  width:31px;
+  height:31px;
+  border-radius:10px;
+  background:rgba(89,232,255,.07);
+  font-size:16px;
+}
+
+.music-theme-card strong,
+.music-theme-card small {
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.music-theme-card strong {
+  font-size:8px;
+}
+
+.music-theme-card small {
+  margin-top:2px;
+  color:#6f8d9b;
+  font-size:6px;
+}
+
+.music-theme-card > b {
+  position:absolute;
+  right:7px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#6f8f9e;
+  font-size:8px;
+}
+
+.music-theme-card.selected {
+  border-color:rgba(255,221,83,.45);
+  background:rgba(255,210,55,.08);
+  box-shadow:inset 0 0 0 1px rgba(255,234,129,.07),0 0 15px rgba(255,207,46,.06);
+}
+
+.music-theme-card.selected > b {
+  color:#ffe36d;
+}
+
+@media (max-width:360px) {
+  .music-theme-grid { grid-template-columns:1fr; }
+}
