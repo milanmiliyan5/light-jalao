@@ -1684,7 +1684,7 @@ function showModal(id) {
   if (id === "hintRechargeModal") updateHintUI();
   if (id === "settingsModal") {
     syncSettingsUI();
-    window.setTimeout(measureRenderFps, 80);
+    window.setTimeout(measureRenderFps, 650);
   }
   el.classList.remove("hidden");
   el.setAttribute("aria-hidden", "false");
@@ -1791,41 +1791,74 @@ function nativeTargetRefreshRate() {
   }
 }
 
+function nativeCurrentRefreshRate() {
+  try {
+    const value = Number(window.LightJalaoNative?.getCurrentRefreshRate?.());
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function hzLabel(value) {
+  return value > 0 ? `${Math.round(value)}Hz` : "AUTO";
+}
+
 function measureRenderFps() {
   if (!performanceDetail || !performanceState) return;
 
   const token = ++fpsMeasureToken;
   const targetHz = nativeTargetRefreshRate();
-  const samples = [];
+  const intervals = [];
   let last = performance.now();
   const started = last;
+  const durationMs = 3500;
 
-  performanceState.textContent = targetHz >= 119 ? "120Hz" : targetHz >= 89 ? "90Hz" : targetHz > 0 ? `${Math.round(targetHz)}Hz` : "AUTO";
+  const initialCurrentHz = nativeCurrentRefreshRate();
+  performanceState.textContent = hzLabel(initialCurrentHz || targetHz);
   performanceDetail.textContent = targetHz > 0
-    ? `Display target ${Math.round(targetHz)}Hz • measuring render FPS…`
-    : "Measuring render FPS…";
+    ? `Current ${hzLabel(initialCurrentHz)} • requested ${hzLabel(targetHz)} • measuring…`
+    : "Measuring stable render FPS…";
 
   function frame(now) {
     if (token !== fpsMeasureToken) return;
 
     const delta = now - last;
     last = now;
-    if (delta > 0 && delta < 100) samples.push(1000 / delta);
 
-    if (now - started < 1300) {
+    // Keep normal frame intervals. Huge pauses are app/system interruptions,
+    // not the sustained game frame rate we want to report.
+    if (delta >= 3 && delta <= 50) intervals.push(delta);
+
+    if (now - started < durationMs) {
       requestAnimationFrame(frame);
       return;
     }
 
-    const stable = samples.slice(Math.floor(samples.length * .12));
-    const avg = stable.length
-      ? stable.reduce((sum, value) => sum + value, 0) / stable.length
-      : 0;
-    const renderFps = Math.round(avg);
+    if (!intervals.length) {
+      performanceDetail.textContent = "FPS sample unavailable • try again.";
+      return;
+    }
 
-    performanceDetail.textContent = targetHz > 0
-      ? `Display target ${Math.round(targetHz)}Hz • render ~${renderFps} FPS`
-      : `Render ~${renderFps} FPS • device controls refresh rate`;
+    const sorted = [...intervals].sort((a, b) => a - b);
+    const trim = Math.floor(sorted.length * 0.12);
+    const stable = sorted.slice(trim, Math.max(trim + 1, sorted.length - trim));
+    const avgDelta = stable.reduce((sum, value) => sum + value, 0) / stable.length;
+    const renderFps = Math.max(1, Math.round(1000 / avgDelta));
+    const currentHz = nativeCurrentRefreshRate() || initialCurrentHz;
+
+    performanceState.textContent = hzLabel(currentHz || targetHz);
+
+    if (currentHz > 0 && targetHz > 0) {
+      performanceDetail.textContent =
+        `Current ${hzLabel(currentHz)} • requested ${hzLabel(targetHz)} • render ~${renderFps} FPS`;
+    } else if (currentHz > 0) {
+      performanceDetail.textContent =
+        `Current ${hzLabel(currentHz)} • render ~${renderFps} FPS`;
+    } else {
+      performanceDetail.textContent =
+        `Render ~${renderFps} FPS • Android controls refresh rate`;
+    }
   }
 
   requestAnimationFrame(frame);
