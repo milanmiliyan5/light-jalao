@@ -178,6 +178,19 @@ const replayBtn = document.getElementById("replayBtn");
 const levelsGrid = document.getElementById("levelsGrid");
 const winTitle = document.getElementById("winTitle");
 const winCopy = document.getElementById("winCopy");
+const winStars = document.getElementById("winStars");
+const winRating = document.getElementById("winRating");
+const homeScreen = document.getElementById("homeScreen");
+const homeBtn = document.getElementById("homeBtn");
+const continueBtn = document.getElementById("continueBtn");
+const continueLabel = document.getElementById("continueLabel");
+const homeLevelsBtn = document.getElementById("homeLevelsBtn");
+const homeHelpBtn = document.getElementById("homeHelpBtn");
+const homeWorld = document.getElementById("homeWorld");
+const homeLevel = document.getElementById("homeLevel");
+const homeStars = document.getElementById("homeStars");
+const homeCompleted = document.getElementById("homeCompleted");
+const homeProgressFill = document.getElementById("homeProgressFill");
 
 let currentLevel = 0;
 let solvedMasks = [];
@@ -194,6 +207,7 @@ let timerStarted = false;
 let locked = false;
 let soundEnabled = true;
 let audioContext = null;
+let parMoves = 0;
 
 const progress = loadProgress();
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
@@ -204,10 +218,11 @@ function loadProgress() {
     return {
       unlocked: Math.max(1, Number(raw.unlocked) || 1),
       currentLevel: Number(raw.currentLevel) || 0,
-      best: raw.best && typeof raw.best === "object" ? raw.best : {}
+      best: raw.best && typeof raw.best === "object" ? raw.best : {},
+      stars: raw.stars && typeof raw.stars === "object" ? raw.stars : {}
     };
   } catch {
-    return { unlocked: 1, currentLevel: 0, best: {} };
+    return { unlocked: 1, currentLevel: 0, best: {}, stars: {} };
   }
 }
 
@@ -478,6 +493,78 @@ function makeScramble(size, seed) {
   return result;
 }
 
+function turnsToSolved(mask, startRotation) {
+  for (let turns = 0; turns < 4; turns += 1) {
+    if (rotateMask(mask, (startRotation + turns) % 4) === mask) return turns;
+  }
+  return 3;
+}
+
+function calculatePar() {
+  return solvedMasks.reduce((total, mask, index) => {
+    if (
+      index === 0 ||
+      mask === 0 ||
+      fixedTiles.has(index) ||
+      blockedCells.has(index)
+    ) return total;
+
+    return total + turnsToSolved(mask, startRotations[index]);
+  }, 0);
+}
+
+function ratingForMoves(moveCount) {
+  const par = Math.max(1, parMoves);
+  if (moveCount <= par + Math.max(1, Math.floor(par * .08))) return 3;
+  if (moveCount <= Math.ceil(par * 1.35) + 2) return 2;
+  return 1;
+}
+
+function totalEarnedStars() {
+  return Object.values(progress.stars || {}).reduce((sum, value) => sum + (Number(value) || 0), 0);
+}
+
+function completedLevelsCount() {
+  return Object.keys(progress.best || {}).length;
+}
+
+function updateHomeScreen() {
+  const level = LEVELS[currentLevel];
+  const completed = completedLevelsCount();
+  const nextNumber = Math.min(currentLevel + 1, LEVELS.length);
+
+  homeWorld.textContent = level.worldName;
+  homeLevel.textContent = `Level ${nextNumber} / ${LEVELS.length}`;
+  homeStars.textContent = totalEarnedStars();
+  homeCompleted.textContent = completed;
+  homeProgressFill.style.width = `${Math.max(1, (completed / LEVELS.length) * 100)}%`;
+  continueLabel.textContent = completed === 0 ? "Start Level 1" : `Level ${nextNumber} • ${level.worldName}`;
+}
+
+function showHome() {
+  stopTimer();
+  timerStarted = false;
+  updateHomeScreen();
+  homeScreen.classList.remove("hidden");
+}
+
+function hideHome() {
+  homeScreen.classList.add("hidden");
+}
+
+function renderWinStars(stars) {
+  [...winStars.children].forEach((star, index) => {
+    star.textContent = index < stars ? "★" : "☆";
+    star.classList.toggle("earned", index < stars);
+  });
+
+  winRating.textContent = stars === 3
+    ? "Perfect circuit! 3 stars"
+    : stars === 2
+      ? "Great connection! 2 stars"
+      : "Circuit cleared! 1 star";
+}
+
 function applyWorldTheme(level) {
   document.body.dataset.world = level.world;
   brandTagline.textContent = level.tagline;
@@ -526,6 +613,7 @@ function buildLevel(levelIndex) {
   fixedTiles = chooseFixedTiles(level);
   rotations = makeScramble(level.size, level.seed);
   startRotations = [...rotations];
+  parMoves = calculatePar();
 
   levelText.textContent = `Level ${currentLevel + 1}`;
   challengeBadge.textContent = `${level.worldName} • ${level.mode}`;
@@ -835,6 +923,9 @@ function completeLevel() {
     progress.best[key] = { moves, time: elapsed };
   }
 
+  const earnedStars = ratingForMoves(moves);
+  progress.stars[key] = Math.max(Number(progress.stars[key]) || 0, earnedStars);
+
   progress.unlocked = Math.max(progress.unlocked, Math.min(LEVELS.length, currentLevel + 2));
   saveProgress();
   renderLevels();
@@ -853,7 +944,9 @@ function completeLevel() {
     winTitle.textContent = `${level.worldName} complete! ✨`;
   }
 
-  winCopy.textContent = `${level.worldName} • ${bulbs.length} bulbs • ${moves} moves • ${formatTime(elapsed)}`;
+  renderWinStars(earnedStars);
+  winCopy.textContent = `${level.worldName} • ${bulbs.length} bulbs • ${moves} moves • Par ${parMoves} • ${formatTime(elapsed)}`;
+  updateHomeScreen();
   nextBtn.textContent = currentLevel === LEVELS.length - 1 ? "Play from Level 1 ↻" : "Next Level →";
 
   makeConfetti();
@@ -888,7 +981,12 @@ function renderLevels() {
       done ? "done" : ""
     ].filter(Boolean).join(" ");
 
-    button.textContent = unlocked ? number : "🔒";
+    const stars = Number(progress.stars[String(index)]) || 0;
+    if (unlocked) {
+      button.innerHTML = `<span class="level-number">${number}</span><span class="level-mini-stars">${stars ? "★".repeat(stars) : ""}</span>`;
+    } else {
+      button.textContent = "🔒";
+    }
     button.disabled = !unlocked;
     button.setAttribute("aria-label", unlocked
       ? `Level ${number}, ${level.size} by ${level.size}, ${level.worldName}, ${level.mode}`
@@ -898,6 +996,7 @@ function renderLevels() {
       button.addEventListener("click", () => {
         hideModal("levelsModal");
         buildLevel(index);
+        hideHome();
       });
     }
 
@@ -979,6 +1078,10 @@ function vibrate(pattern) {
 restartBtn.addEventListener("click", restartLevel);
 hintBtn.addEventListener("click", showHint);
 helpBtn.addEventListener("click", () => showModal("helpModal"));
+homeBtn.addEventListener("click", showHome);
+continueBtn.addEventListener("click", hideHome);
+homeLevelsBtn.addEventListener("click", () => showModal("levelsModal"));
+homeHelpBtn.addEventListener("click", () => showModal("helpModal"));
 levelsBtn.addEventListener("click", () => showModal("levelsModal"));
 
 soundBtn.addEventListener("click", () => {
@@ -1005,11 +1108,13 @@ nextBtn.addEventListener("click", () => {
   hideModal("winModal");
   const next = currentLevel === LEVELS.length - 1 ? 0 : currentLevel + 1;
   buildLevel(next);
+  hideHome();
 });
 
 replayBtn.addEventListener("click", () => {
   hideModal("winModal");
   buildLevel(currentLevel);
+  hideHome();
 });
 
 document.addEventListener("keydown", event => {
@@ -1020,8 +1125,5 @@ document.addEventListener("keydown", event => {
 });
 
 buildLevel(currentLevel);
-
-if (!localStorage.getItem(HELP_KEY)) {
-  localStorage.setItem(HELP_KEY, "1");
-  window.setTimeout(() => showModal("helpModal"), 420);
-}
+updateHomeScreen();
+showHome();
