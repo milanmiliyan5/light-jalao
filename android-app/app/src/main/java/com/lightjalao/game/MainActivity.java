@@ -352,6 +352,19 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public float getCurrentRefreshRate() {
+            try {
+                Display display = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                    ? MainActivity.this.getDisplay()
+                    : MainActivity.this.getWindowManager().getDefaultDisplay();
+
+                return display != null ? display.getRefreshRate() : 0f;
+            } catch (Throwable ignored) {
+                return 0f;
+            }
+        }
+
+        @JavascriptInterface
         public void vibrate(String pattern) {
             if (pattern == null || pattern.trim().isEmpty()) return;
 
