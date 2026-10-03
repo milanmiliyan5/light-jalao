@@ -2560,3 +2560,96 @@ body[data-world="endless"] {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ---------- Installable app / PWA ---------- */
+.install-app-btn {
+  display: grid;
+  grid-template-columns: 38px 1fr 18px;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 58px;
+  margin-top: 9px;
+  padding: 8px 11px;
+  border: 1px solid rgba(var(--world-rgb), .17);
+  border-radius: 16px;
+  color: #eaf3f6;
+  background:
+    radial-gradient(circle at 8% 30%, rgba(var(--world-rgb), .1), transparent 34%),
+    rgba(255,255,255,.032);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+  transition: transform .16s ease, border-color .2s ease, opacity .2s ease;
+}
+
+.install-app-btn:active {
+  transform: scale(.975);
+}
+
+.install-app-btn.hidden {
+  display: none;
+}
+
+.install-app-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: #15150c;
+  background: linear-gradient(135deg, var(--world-hot), var(--world-accent));
+  box-shadow: 0 0 14px rgba(var(--world-rgb), .2);
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.install-app-btn span:nth-child(2) {
+  min-width: 0;
+}
+
+.install-app-btn small,
+.install-app-btn strong {
+  display: block;
+}
+
+.install-app-btn small {
+  margin-bottom: 2px;
+  color: #6f8490;
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: .11em;
+}
+
+.install-app-btn strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.install-app-btn > b {
+  color: #70848f;
+  font-size: 17px;
+}
+
+body.app-installed .install-app-btn {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  .home-screen {
+    min-height: 100dvh;
+  }
+
+  .app {
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+}
