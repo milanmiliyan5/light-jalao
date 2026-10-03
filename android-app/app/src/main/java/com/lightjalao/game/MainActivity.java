@@ -1,5 +1,8 @@
 package com.lightjalao.game;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
@@ -48,6 +51,8 @@ public class MainActivity extends Activity {
     private FrameLayout root;
     private FrameLayout adHolder;
     private FrameLayout splash;
+    private AnimatorSet splashPulseAnimator;
+    private long splashShownAt = 0L;
     private AdView bannerAd;
     private volatile RewardedAd rewardedAd;
     private boolean pageReady = false;
@@ -125,6 +130,7 @@ public class MainActivity extends Activity {
         root.addView(adHolder, adHolderParams);
 
         splash = createSplash();
+        splashShownAt = System.currentTimeMillis();
         root.addView(
             splash,
             new FrameLayout.LayoutParams(
@@ -142,90 +148,126 @@ public class MainActivity extends Activity {
     private FrameLayout createSplash() {
         FrameLayout layer = new FrameLayout(this);
 
-        GradientDrawable bg = new GradientDrawable(
+        GradientDrawable background = new GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             new int[] {
-                Color.rgb(28, 83, 108),
-                Color.rgb(15, 50, 68),
-                Color.rgb(8, 29, 41)
+                Color.rgb(3, 14, 31),
+                Color.rgb(4, 28, 54),
+                Color.rgb(2, 13, 27)
             }
         );
-        layer.setBackground(bg);
+        layer.setBackground(background);
 
-        LinearLayout center = new LinearLayout(this);
-        center.setOrientation(LinearLayout.VERTICAL);
-        center.setGravity(Gravity.CENTER);
-        center.setPadding(dp(24), dp(24), dp(24), dp(24));
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int logoSize = Math.min(dp(304), Math.max(dp(236), screenWidth - dp(44)));
 
-        ImageView icon = new ImageView(this);
-        icon.setImageResource(com.lightjalao.game.R.drawable.ic_launcher);
-        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(116), dp(116));
-        iconParams.bottomMargin = dp(12);
-        center.addView(icon, iconParams);
+        View halo = new View(this);
+        GradientDrawable haloDrawable = new GradientDrawable();
+        haloDrawable.setShape(GradientDrawable.OVAL);
+        haloDrawable.setColor(Color.argb(26, 0, 174, 255));
+        haloDrawable.setStroke(dp(2), Color.argb(92, 44, 211, 255));
+        halo.setBackground(haloDrawable);
+        halo.setAlpha(0.28f);
 
-        TextView title = new TextView(this);
-        title.setText("LIGHT JALAO");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(30);
-        title.setGravity(Gravity.CENTER);
-        title.setLetterSpacing(0.04f);
-        center.addView(title);
-
-        TextView subtitle = new TextView(this);
-        subtitle.setText("CONNECT • POWER • GLOW");
-        subtitle.setTextColor(Color.rgb(171, 228, 246));
-        subtitle.setTextSize(10);
-        subtitle.setGravity(Gravity.CENTER);
-        subtitle.setLetterSpacing(0.12f);
-        LinearLayout.LayoutParams subParams =
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-        subParams.topMargin = dp(8);
-        center.addView(subtitle, subParams);
-
-        TextView loading = new TextView(this);
-        loading.setText("⚡ POWERING UP");
-        loading.setTextColor(Color.rgb(255, 221, 99));
-        loading.setTextSize(10);
-        loading.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams loadParams =
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-        loadParams.topMargin = dp(26);
-        center.addView(loading, loadParams);
-
-        FrameLayout.LayoutParams centerParams =
+        FrameLayout.LayoutParams haloParams =
             new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
+                logoSize + dp(46),
+                logoSize + dp(46),
                 Gravity.CENTER
             );
-        layer.addView(center, centerParams);
+        layer.addView(halo, haloParams);
+
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(com.lightjalao.game.R.drawable.light_jalao_logo);
+        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        logo.setAlpha(0.98f);
+
+        FrameLayout.LayoutParams logoParams =
+            new FrameLayout.LayoutParams(
+                logoSize,
+                logoSize,
+                Gravity.CENTER
+            );
+        layer.addView(logo, logoParams);
+
+        ObjectAnimator logoScaleX =
+            ObjectAnimator.ofFloat(logo, View.SCALE_X, 0.965f, 1.025f);
+        logoScaleX.setDuration(720);
+        logoScaleX.setRepeatCount(ValueAnimator.INFINITE);
+        logoScaleX.setRepeatMode(ValueAnimator.REVERSE);
+
+        ObjectAnimator logoScaleY =
+            ObjectAnimator.ofFloat(logo, View.SCALE_Y, 0.965f, 1.025f);
+        logoScaleY.setDuration(720);
+        logoScaleY.setRepeatCount(ValueAnimator.INFINITE);
+        logoScaleY.setRepeatMode(ValueAnimator.REVERSE);
+
+        ObjectAnimator logoLift =
+            ObjectAnimator.ofFloat(logo, View.TRANSLATION_Y, dp(3), -dp(3));
+        logoLift.setDuration(900);
+        logoLift.setRepeatCount(ValueAnimator.INFINITE);
+        logoLift.setRepeatMode(ValueAnimator.REVERSE);
+
+        ObjectAnimator haloScaleX =
+            ObjectAnimator.ofFloat(halo, View.SCALE_X, 0.88f, 1.14f);
+        haloScaleX.setDuration(1120);
+        haloScaleX.setRepeatCount(ValueAnimator.INFINITE);
+        haloScaleX.setRepeatMode(ValueAnimator.REVERSE);
+
+        ObjectAnimator haloScaleY =
+            ObjectAnimator.ofFloat(halo, View.SCALE_Y, 0.88f, 1.14f);
+        haloScaleY.setDuration(1120);
+        haloScaleY.setRepeatCount(ValueAnimator.INFINITE);
+        haloScaleY.setRepeatMode(ValueAnimator.REVERSE);
+
+        ObjectAnimator haloAlpha =
+            ObjectAnimator.ofFloat(halo, View.ALPHA, 0.10f, 0.38f);
+        haloAlpha.setDuration(1120);
+        haloAlpha.setRepeatCount(ValueAnimator.INFINITE);
+        haloAlpha.setRepeatMode(ValueAnimator.REVERSE);
+
+        splashPulseAnimator = new AnimatorSet();
+        splashPulseAnimator.playTogether(
+            logoScaleX,
+            logoScaleY,
+            logoLift,
+            haloScaleX,
+            haloScaleY,
+            haloAlpha
+        );
+        splashPulseAnimator.start();
+
         return layer;
     }
 
     private void revealGame() {
-        webView.animate()
-            .alpha(1f)
-            .setDuration(320)
-            .start();
+        long elapsed = System.currentTimeMillis() - splashShownAt;
+        long minimumSplashMs = 900L;
+        long remaining = Math.max(0L, minimumSplashMs - elapsed);
 
-        splash.postDelayed(() ->
+        splash.postDelayed(() -> {
+            webView.animate()
+                .alpha(1f)
+                .setDuration(300)
+                .start();
+
             splash.animate()
                 .alpha(0f)
-                .setDuration(360)
+                .scaleX(1.035f)
+                .scaleY(1.035f)
+                .setDuration(340)
                 .withEndAction(() -> {
+                    if (splashPulseAnimator != null) {
+                        splashPulseAnimator.cancel();
+                        splashPulseAnimator = null;
+                    }
+
                     if (splash.getParent() == root) {
                         root.removeView(splash);
                     }
                 })
-                .start(),
-            260
-        );
+                .start();
+        }, remaining);
     }
 
     private void initializeAdsAfterFirstPaint() {
@@ -517,6 +559,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (splashPulseAnimator != null) {
+            splashPulseAnimator.cancel();
+            splashPulseAnimator = null;
+        }
         if (bannerAd != null) bannerAd.destroy();
         if (webView != null) webView.destroy();
         super.onDestroy();
