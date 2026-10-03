@@ -1891,8 +1891,10 @@ function isStandaloneApp() {
 }
 
 function updateInstallButton() {
-  const installed = isStandaloneApp() || isNativeAndroidWrapper();
+  const nativeAndroid = isNativeAndroidWrapper();
+  const installed = isStandaloneApp() || nativeAndroid;
   document.body.classList.toggle("app-installed", installed);
+  document.body.classList.toggle("native-android", nativeAndroid);
 
   if (!installAppBtn) return;
 
