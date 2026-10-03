@@ -18,7 +18,7 @@
   <link rel="icon" href="icons/light-jalao-icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/light-jalao-icon.svg" />
   <title>Light Jalao 💡</title>
-  <link rel="stylesheet" href="style.css?v=20261004-loud-audio-v1" />
+  <link rel="stylesheet" href="style.css?v=20261004-music-themes-v1" />
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
@@ -409,9 +409,29 @@
         </button>
         <button class="setting-row" id="musicToggleBtn" type="button">
           <span class="setting-icon">♫</span>
-          <span><strong>Background Music</strong><small>Soft arcade music while you play</small></span>
+          <span><strong>Background Music</strong><small>Choose a theme below and tap to preview</small></span>
           <b id="musicSettingState">ON</b>
         </button>
+        <div class="music-theme-picker">
+          <div class="music-theme-head">
+            <span>MUSIC STYLE</span>
+            <small>Tap to preview</small>
+          </div>
+          <div class="music-theme-grid" id="musicThemeGrid">
+            <button class="music-theme-card" type="button" data-music-theme="neon">
+              <span>⚡</span><strong>Neon Rush</strong><small>Bright • energetic</small><b>▶</b>
+            </button>
+            <button class="music-theme-card" type="button" data-music-theme="chill">
+              <span>🌙</span><strong>Circuit Chill</strong><small>Soft • relaxed</small><b>▶</b>
+            </button>
+            <button class="music-theme-card" type="button" data-music-theme="retro">
+              <span>👾</span><strong>Retro Spark</strong><small>8-bit • arcade</small><b>▶</b>
+            </button>
+            <button class="music-theme-card" type="button" data-music-theme="voltage">
+              <span>🔥</span><strong>Voltage Run</strong><small>Fast • intense</small><b>▶</b>
+            </button>
+          </div>
+        </div>
         <div class="setting-volume-row">
           <span class="setting-icon">🔊</span>
           <span class="volume-copy"><strong>Game Volume</strong><small>Louder master output for music + effects</small></span>
@@ -462,6 +482,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=20261004-loud-audio-v1"></script>
+  <script src="script.js?v=20261004-music-themes-v1"></script>
 </body>
 </html>
