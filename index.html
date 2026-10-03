@@ -18,7 +18,7 @@
   <link rel="icon" href="icons/light-jalao-icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/light-jalao-icon.svg" />
   <title>Light Jalao 💡</title>
-  <link rel="stylesheet" href="style.css?v=20261003-lobby-v2" />
+  <link rel="stylesheet" href="style.css?v=20261004-loud-audio-v1" />
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
@@ -412,6 +412,12 @@
           <span><strong>Background Music</strong><small>Soft arcade music while you play</small></span>
           <b id="musicSettingState">ON</b>
         </button>
+        <div class="setting-volume-row">
+          <span class="setting-icon">🔊</span>
+          <span class="volume-copy"><strong>Game Volume</strong><small>Louder master output for music + effects</small></span>
+          <b id="masterVolumeValue">120%</b>
+          <input id="masterVolumeSlider" type="range" min="40" max="150" step="5" value="120" aria-label="Game volume" />
+        </div>
         <button class="setting-row" id="hapticToggleBtn" type="button">
           <span class="setting-icon">〰</span>
           <span><strong>Vibration</strong><small>Subtle haptic feedback while playing</small></span>
@@ -456,6 +462,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=20261004-audio-system-v1"></script>
+  <script src="script.js?v=20261004-loud-audio-v1"></script>
 </body>
 </html>
