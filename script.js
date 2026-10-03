@@ -1535,7 +1535,8 @@ function vibrate(pattern) {
 let deferredInstallPrompt = null;
 
 function isStandaloneApp() {
-  return window.matchMedia("(display-mode: standalone)").matches ||
+  return location.protocol === "file:" ||
+    window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true;
 }
 
