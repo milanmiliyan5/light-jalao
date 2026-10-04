@@ -224,6 +224,9 @@ const winTitle = document.getElementById("winTitle");
 const winCopy = document.getElementById("winCopy");
 const winStars = document.getElementById("winStars");
 const winRating = document.getElementById("winRating");
+const winMovesValue = document.getElementById("winMovesValue");
+const winTimeValue = document.getElementById("winTimeValue");
+const winBestValue = document.getElementById("winBestValue");
 const homeScreen = document.getElementById("homeScreen");
 const homeBtn = document.getElementById("homeBtn");
 const continueBtn = document.getElementById("continueBtn");
@@ -273,9 +276,19 @@ const battleProfileName = document.getElementById("battleProfileName");
 const rewardModalStreak = document.getElementById("rewardModalStreak");
 const rewardModalStars = document.getElementById("rewardModalStars");
 const rewardModalAchievements = document.getElementById("rewardModalAchievements");
+const rewardTodayIcon = document.getElementById("rewardTodayIcon");
+const rewardTodayText = document.getElementById("rewardTodayText");
+const rewardTodayDay = document.getElementById("rewardTodayDay");
+const dailyRewardTrack = document.getElementById("dailyRewardTrack");
+const claimDailyRewardBtn = document.getElementById("claimDailyRewardBtn");
+const rewardClaimStatus = document.getElementById("rewardClaimStatus");
 const profileAvatarPreview = document.getElementById("profileAvatarPreview");
 const profilePreviewName = document.getElementById("profilePreviewName");
 const profilePlayerId = document.getElementById("profilePlayerId");
+const profilePreviewTitle = document.getElementById("profilePreviewTitle");
+const profileFrameGrid = document.getElementById("profileFrameGrid");
+const profileTitleSelect = document.getElementById("profileTitleSelect");
+const battleProfileTitle = document.getElementById("battleProfileTitle");
 const profileNameInput = document.getElementById("profileNameInput");
 const emojiAvatarGrid = document.getElementById("emojiAvatarGrid");
 const profileStars = document.getElementById("profileStars");
@@ -291,6 +304,17 @@ const musicSettingState = document.getElementById("musicSettingState");
 const musicThemeGrid = document.getElementById("musicThemeGrid");
 const masterVolumeSlider = document.getElementById("masterVolumeSlider");
 const masterVolumeValue = document.getElementById("masterVolumeValue");
+const sfxVolumeSlider = document.getElementById("sfxVolumeSlider");
+const sfxVolumeValue = document.getElementById("sfxVolumeValue");
+const musicVolumeSlider = document.getElementById("musicVolumeSlider");
+const musicVolumeValue = document.getElementById("musicVolumeValue");
+const exportBackupBtn = document.getElementById("exportBackupBtn");
+const importBackupBtn = document.getElementById("importBackupBtn");
+const backupCodeInput = document.getElementById("backupCodeInput");
+const backupModalTitle = document.getElementById("backupModalTitle");
+const backupModalCopy = document.getElementById("backupModalCopy");
+const backupStatus = document.getElementById("backupStatus");
+const backupPrimaryBtn = document.getElementById("backupPrimaryBtn");
 const hapticSettingState = document.getElementById("hapticSettingState");
 const hintEnergyText = document.getElementById("hintEnergyText");
 const hintMiniTimer = document.getElementById("hintMiniTimer");
@@ -320,6 +344,8 @@ let musicEnabled = true;
 let selectedMusicTheme = "neon";
 let hapticsEnabled = true;
 let masterVolumePercent = 120;
+let sfxVolumePercent = 100;
+let musicVolumePercent = 100;
 let audioContext = null;
 let sfxMasterGain = null;
 let musicMasterGain = null;
@@ -361,7 +387,10 @@ function defaultProfile() {
   return {
     playerId,
     name: `Player ${playerId.slice(-4)}`,
-    avatar: "😎"
+    avatar: "😎",
+    frame: "basic",
+    title: "Grid Rookie",
+    schemaVersion: 1
   };
 }
 
@@ -380,6 +409,8 @@ selectedMusicTheme = ["neon","chill","retro","voltage"].includes(progress.settin
   ? progress.settings.musicTheme
   : "neon";
 masterVolumePercent = Math.max(40, Math.min(150, Number(progress.settings?.volume) || 120));
+sfxVolumePercent = Math.max(0, Math.min(120, Number.isFinite(Number(progress.settings?.sfxVolume)) ? Number(progress.settings.sfxVolume) : 100));
+musicVolumePercent = Math.max(0, Math.min(120, Number.isFinite(Number(progress.settings?.musicVolume)) ? Number(progress.settings.musicVolume) : 100));
 hapticsEnabled = progress.settings?.haptics !== false;
 currentLevel = Math.min(Number(progress.currentLevel) || 0, LEVELS.length - 1);
 
@@ -399,7 +430,7 @@ function loadProgress() {
       achievements: raw.achievements && typeof raw.achievements === "object" ? raw.achievements : {},
       settings: raw.settings && typeof raw.settings === "object"
         ? raw.settings
-        : { sound: true, music: true, musicTheme: "neon", volume: 120, haptics: true },
+        : { sound: true, music: true, musicTheme: "neon", volume: 120, sfxVolume: 100, musicVolume: 100, haptics: true },
       hints: raw.hints && typeof raw.hints === "object"
         ? raw.hints
         : { count: 5, lastRefillAt: Date.now() },
@@ -407,9 +438,32 @@ function loadProgress() {
         ? {
             playerId: String(raw.profile.playerId || generateLocalPlayerId()),
             name: normalizeProfileName(raw.profile.name) || "Player",
-            avatar: PROFILE_AVATARS.includes(raw.profile.avatar) ? raw.profile.avatar : "😎"
+            avatar: PROFILE_AVATARS.includes(raw.profile.avatar) ? raw.profile.avatar : "😎",
+            frame: ["basic","cyan","gold","purple"].includes(raw.profile.frame) ? raw.profile.frame : "basic",
+            title: String(raw.profile.title || "Grid Rookie").slice(0, 24),
+            schemaVersion: 1
           }
-        : defaultProfile()
+        : defaultProfile(),
+      rewards: raw.rewards && typeof raw.rewards === "object"
+        ? {
+            lastClaimDate: String(raw.rewards.lastClaimDate || ""),
+            cycleDay: Math.max(0, Math.min(7, Number(raw.rewards.cycleDay) || 0))
+          }
+        : { lastClaimDate: "", cycleDay: 0 },
+      cosmetics: raw.cosmetics && typeof raw.cosmetics === "object"
+        ? {
+            frames: Array.isArray(raw.cosmetics.frames) ? raw.cosmetics.frames : ["basic"],
+            titles: Array.isArray(raw.cosmetics.titles) ? raw.cosmetics.titles : ["Grid Rookie"]
+          }
+        : { frames: ["basic"], titles: ["Grid Rookie"] },
+      battle: raw.battle && typeof raw.battle === "object"
+        ? {
+            rank: String(raw.battle.rank || "Unranked"),
+            wins: Math.max(0, Number(raw.battle.wins) || 0),
+            losses: Math.max(0, Number(raw.battle.losses) || 0),
+            schemaVersion: 1
+          }
+        : { rank: "Unranked", wins: 0, losses: 0, schemaVersion: 1 }
     };
   } catch {
     return {
@@ -420,9 +474,12 @@ function loadProgress() {
       daily: {},
       endlessBest: 0,
       achievements: {},
-      settings: { sound: true, music: true, musicTheme: "neon", volume: 120, haptics: true },
+      settings: { sound: true, music: true, musicTheme: "neon", volume: 120, sfxVolume: 100, musicVolume: 100, haptics: true },
       hints: { count: 5, lastRefillAt: Date.now() },
-      profile: defaultProfile()
+      profile: defaultProfile(),
+      rewards: { lastClaimDate: "", cycleDay: 0 },
+      cosmetics: { frames: ["basic"], titles: ["Grid Rookie"] },
+      battle: { rank: "Unranked", wins: 0, losses: 0, schemaVersion: 1 }
     };
   }
 }
@@ -903,16 +960,244 @@ function renderWorldProgress() {
   });
 }
 
+const DAILY_REWARDS = [
+  { icon: "✦", label: "+1 Smart Hint", type: "hint" },
+  { icon: "🟦", label: "Cyan Avatar Frame", type: "frame", value: "cyan" },
+  { icon: "✦", label: "+1 Smart Hint", type: "hint" },
+  { icon: "🏷", label: "Circuit Rookie Title", type: "title", value: "Circuit Rookie" },
+  { icon: "✦", label: "+1 Smart Hint", type: "hint" },
+  { icon: "🟨", label: "Gold Avatar Frame", type: "frame", value: "gold" },
+  { icon: "🏆", label: "Power Master Title", type: "title", value: "Power Master" }
+];
+
+const WORLD_SYMBOLS = {
+  spark: "⚡", neon: "✦", bio: "❧", quantum: "◈", master: "◆",
+  arctic: "❄", solar: "☀", cyber: "⌁", ocean: "≈", plasma: "✺",
+  retro: "▣", void: "◌", infinity: "∞", daily: "☀", endless: "∞"
+};
+
+function ensurePremiumProgress() {
+  progress.settings ||= {};
+  if (!Number.isFinite(Number(progress.settings.sfxVolume))) progress.settings.sfxVolume = 100;
+  if (!Number.isFinite(Number(progress.settings.musicVolume))) progress.settings.musicVolume = 100;
+
+  progress.rewards ||= { lastClaimDate: "", cycleDay: 0 };
+  progress.cosmetics ||= { frames: ["basic"], titles: ["Grid Rookie"] };
+  progress.battle ||= { rank: "Unranked", wins: 0, losses: 0, schemaVersion: 1 };
+
+  if (!Array.isArray(progress.cosmetics.frames)) progress.cosmetics.frames = ["basic"];
+  if (!progress.cosmetics.frames.includes("basic")) progress.cosmetics.frames.unshift("basic");
+  if (!Array.isArray(progress.cosmetics.titles)) progress.cosmetics.titles = ["Grid Rookie"];
+  if (!progress.cosmetics.titles.includes("Grid Rookie")) progress.cosmetics.titles.unshift("Grid Rookie");
+
+  const stars = totalEarnedStars();
+  if (stars >= 30 && !progress.cosmetics.frames.includes("purple")) progress.cosmetics.frames.push("purple");
+  if (stars >= 50 && !progress.cosmetics.titles.includes("Star Collector")) progress.cosmetics.titles.push("Star Collector");
+}
+
+function dateKeyDistance(fromKey, toKey) {
+  if (!fromKey || !toKey) return Infinity;
+  const [fy,fm,fd] = fromKey.split("-").map(Number);
+  const [ty,tm,td] = toKey.split("-").map(Number);
+  if (![fy,fm,fd,ty,tm,td].every(Number.isFinite)) return Infinity;
+  const from = Date.UTC(fy, fm - 1, fd);
+  const to = Date.UTC(ty, tm - 1, td);
+  return Math.round((to - from) / 86400000);
+}
+
+function nextRewardDay() {
+  const today = localDateKey();
+  const last = progress.rewards?.lastClaimDate || "";
+  const current = Math.max(0, Math.min(7, Number(progress.rewards?.cycleDay) || 0));
+
+  if (last === today) return current || 1;
+  const gap = dateKeyDistance(last, today);
+  return gap === 1 ? ((current % 7) + 1) : 1;
+}
+
+function rewardClaimedToday() {
+  return progress.rewards?.lastClaimDate === localDateKey();
+}
+
+function unlockCosmetic(type, value) {
+  ensurePremiumProgress();
+  const key = type === "frame" ? "frames" : "titles";
+  if (!progress.cosmetics[key].includes(value)) progress.cosmetics[key].push(value);
+}
+
+function claimDailyReward() {
+  ensurePremiumProgress();
+  if (rewardClaimedToday()) {
+    if (rewardClaimStatus) rewardClaimStatus.textContent = "Today's reward is already claimed.";
+    return;
+  }
+
+  const day = nextRewardDay();
+  const reward = DAILY_REWARDS[day - 1];
+
+  if (reward.type === "hint") {
+    syncHintEnergy();
+    progress.hints.count = Math.min(HINT_MAX, progress.hints.count + 1);
+    if (progress.hints.count >= HINT_MAX) progress.hints.lastRefillAt = Date.now();
+  } else if (reward.type === "frame") {
+    unlockCosmetic("frame", reward.value);
+  } else if (reward.type === "title") {
+    unlockCosmetic("title", reward.value);
+  }
+
+  progress.rewards.lastClaimDate = localDateKey();
+  progress.rewards.cycleDay = day;
+  saveProgress();
+  updateHintUI();
+  updateLobbyRewards();
+  renderDailyRewards();
+  playGameSound("reward");
+  vibrate([18, 24, 40]);
+
+  if (rewardClaimStatus) rewardClaimStatus.textContent = `Claimed: ${reward.label}`;
+}
+
+function renderDailyRewards() {
+  ensurePremiumProgress();
+  const todayDay = nextRewardDay();
+  const claimed = rewardClaimedToday();
+  const displayDay = claimed ? Math.max(1, progress.rewards.cycleDay || 1) : todayDay;
+  const reward = DAILY_REWARDS[displayDay - 1];
+
+  if (rewardTodayIcon) rewardTodayIcon.textContent = reward.icon;
+  if (rewardTodayText) rewardTodayText.textContent = reward.label;
+  if (rewardTodayDay) rewardTodayDay.textContent = `DAY ${displayDay}`;
+
+  dailyRewardTrack?.querySelectorAll("[data-reward-day]").forEach(button => {
+    const day = Number(button.dataset.rewardDay);
+    button.classList.toggle("current", day === displayDay);
+    button.classList.toggle("claimed", claimed && day === displayDay);
+  });
+
+  if (claimDailyRewardBtn) {
+    claimDailyRewardBtn.disabled = claimed;
+    claimDailyRewardBtn.textContent = claimed ? "✓ Claimed Today" : "Claim Today's Reward";
+  }
+
+  if (rewardClaimStatus) {
+    rewardClaimStatus.textContent = claimed
+      ? "Come back on your next local day for the next reward."
+      : "Ready to claim offline — no ad required.";
+  }
+}
+
+function availableProfileFrames() {
+  ensurePremiumProgress();
+  return new Set(progress.cosmetics.frames);
+}
+
+function availableProfileTitles() {
+  ensurePremiumProgress();
+  return [...new Set(progress.cosmetics.titles)];
+}
+
+function applyAvatarFrame(element, frame) {
+  if (!element) return;
+  element.dataset.frame = frame || "basic";
+}
+
+function battleProfilePayload() {
+  ensurePremiumProgress();
+  return {
+    schemaVersion: 1,
+    playerId: progress.profile.playerId,
+    displayName: progress.profile.name,
+    avatar: progress.profile.avatar,
+    frame: progress.profile.frame,
+    title: progress.profile.title,
+    rank: progress.battle.rank,
+    wins: progress.battle.wins,
+    losses: progress.battle.losses
+  };
+}
+
+let backupMode = "export";
+
+function encodeBackup() {
+  const payload = {
+    product: "light-jalao",
+    backupVersion: 1,
+    createdAt: new Date().toISOString(),
+    progress
+  };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+}
+
+function decodeBackup(code) {
+  const json = decodeURIComponent(escape(atob(String(code || "").replace(/\s+/g, ""))));
+  const payload = JSON.parse(json);
+  if (payload?.product !== "light-jalao" || payload?.backupVersion !== 1 || !payload.progress) {
+    throw new Error("Invalid Light Jalao backup");
+  }
+  return payload.progress;
+}
+
+function openBackupExport() {
+  backupMode = "export";
+  backupModalTitle.textContent = "Backup Code";
+  backupModalCopy.textContent = "Copy this code somewhere safe. It contains only your Light Jalao game progress.";
+  backupCodeInput.value = encodeBackup();
+  backupCodeInput.readOnly = true;
+  backupPrimaryBtn.textContent = "Copy Backup Code";
+  backupStatus.textContent = "";
+  showModal("backupModal");
+}
+
+function openBackupImport() {
+  backupMode = "import";
+  backupModalTitle.textContent = "Restore Progress";
+  backupModalCopy.textContent = "Paste a Light Jalao backup code. Restoring replaces progress on this device.";
+  backupCodeInput.value = "";
+  backupCodeInput.readOnly = false;
+  backupPrimaryBtn.textContent = "Restore This Backup";
+  backupStatus.textContent = "";
+  showModal("backupModal");
+  window.setTimeout(() => backupCodeInput?.focus(), 160);
+}
+
+async function handleBackupPrimary() {
+  if (backupMode === "export") {
+    try {
+      await navigator.clipboard.writeText(backupCodeInput.value);
+      backupStatus.textContent = "Copied ✓";
+    } catch {
+      backupCodeInput.select();
+      backupStatus.textContent = "Select the code and copy it.";
+    }
+    return;
+  }
+
+  try {
+    const restored = decodeBackup(backupCodeInput.value);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(restored));
+    backupStatus.textContent = "Restored ✓ Reloading…";
+    window.setTimeout(() => location.reload(), 450);
+  } catch {
+    backupStatus.textContent = "This backup code is invalid or damaged.";
+  }
+}
+
 let pendingProfileAvatar = "😎";
+let pendingProfileFrame = "basic";
+let pendingProfileTitle = "Grid Rookie";
 
 function ensureProfile() {
   if (!progress.profile || typeof progress.profile !== "object") {
     progress.profile = defaultProfile();
   }
 
+  ensurePremiumProgress();
   if (!progress.profile.playerId) progress.profile.playerId = generateLocalPlayerId();
   progress.profile.name = normalizeProfileName(progress.profile.name) || `Player ${progress.profile.playerId.slice(-4)}`;
   if (!PROFILE_AVATARS.includes(progress.profile.avatar)) progress.profile.avatar = "😎";
+  if (!["basic","cyan","gold","purple"].includes(progress.profile.frame)) progress.profile.frame = "basic";
+  if (!availableProfileFrames().has(progress.profile.frame)) progress.profile.frame = "basic";
+  if (!availableProfileTitles().includes(progress.profile.title)) progress.profile.title = "Grid Rookie";
 }
 
 function renderProfileAvatarGrid() {
@@ -932,6 +1217,7 @@ function renderProfileAvatarGrid() {
     button.addEventListener("click", () => {
       pendingProfileAvatar = emoji;
       profileAvatarPreview.textContent = emoji;
+      renderProfileCosmetics();
       emojiAvatarGrid.querySelectorAll(".emoji-avatar-option").forEach(option => {
         const selected = option.textContent === emoji;
         option.classList.toggle("selected", selected);
@@ -945,6 +1231,33 @@ function renderProfileAvatarGrid() {
   });
 }
 
+function renderProfileCosmetics() {
+  const frames = availableProfileFrames();
+  profileFrameGrid?.querySelectorAll("[data-profile-frame]").forEach(button => {
+    const frame = button.dataset.profileFrame;
+    const unlocked = frames.has(frame);
+    button.disabled = !unlocked;
+    button.classList.toggle("locked", !unlocked);
+    button.classList.toggle("selected", unlocked && frame === pendingProfileFrame);
+    const avatar = button.querySelector("i");
+    if (avatar) {
+      avatar.textContent = pendingProfileAvatar;
+      avatar.dataset.frame = frame;
+    }
+  });
+
+  if (profileTitleSelect) {
+    profileTitleSelect.innerHTML = "";
+    availableProfileTitles().forEach(title => {
+      const option = document.createElement("option");
+      option.value = title;
+      option.textContent = title;
+      option.selected = title === pendingProfileTitle;
+      profileTitleSelect.appendChild(option);
+    });
+  }
+}
+
 function updateHomeProfile() {
   ensureProfile();
   if (homeProfileAvatar) homeProfileAvatar.textContent = progress.profile.avatar;
@@ -952,14 +1265,25 @@ function updateHomeProfile() {
   if (bottomProfileAvatar) bottomProfileAvatar.textContent = progress.profile.avatar;
   if (battleProfileAvatar) battleProfileAvatar.textContent = progress.profile.avatar;
   if (battleProfileName) battleProfileName.textContent = progress.profile.name;
+
+  applyAvatarFrame(homeProfileAvatar, progress.profile.frame);
+  applyAvatarFrame(bottomProfileAvatar, progress.profile.frame);
+  applyAvatarFrame(battleProfileAvatar, progress.profile.frame);
+  if (battleProfileTitle) {
+    battleProfileTitle.textContent = `${progress.profile.title.toUpperCase()} • ${progress.battle.rank.toUpperCase()}`;
+  }
 }
 
 function openProfile() {
   ensureProfile();
   pendingProfileAvatar = progress.profile.avatar;
+  pendingProfileFrame = progress.profile.frame;
+  pendingProfileTitle = progress.profile.title;
 
   profileAvatarPreview.textContent = progress.profile.avatar;
+  applyAvatarFrame(profileAvatarPreview, pendingProfileFrame);
   profilePreviewName.textContent = progress.profile.name;
+  if (profilePreviewTitle) profilePreviewTitle.textContent = pendingProfileTitle;
   profilePlayerId.textContent = progress.profile.playerId;
   profileNameInput.value = progress.profile.name;
   profileStars.textContent = totalEarnedStars();
@@ -969,6 +1293,7 @@ function openProfile() {
   profileError.textContent = "";
   profileError.classList.add("hidden");
   renderProfileAvatarGrid();
+  renderProfileCosmetics();
   showModal("profileModal");
 
   window.setTimeout(() => profileNameInput?.focus(), 180);
@@ -989,6 +1314,8 @@ function savePlayerProfile() {
   progress.profile.avatar = PROFILE_AVATARS.includes(pendingProfileAvatar)
     ? pendingProfileAvatar
     : "😎";
+  progress.profile.frame = availableProfileFrames().has(pendingProfileFrame) ? pendingProfileFrame : "basic";
+  progress.profile.title = availableProfileTitles().includes(pendingProfileTitle) ? pendingProfileTitle : "Grid Rookie";
 
   saveProgress();
   updateHomeProfile();
@@ -1018,6 +1345,7 @@ function updateLobbyRewards() {
   if (rewardModalStreak) rewardModalStreak.textContent = streak;
   if (rewardModalStars) rewardModalStars.textContent = stars;
   if (rewardModalAchievements) rewardModalAchievements.textContent = trophies;
+  renderDailyRewards();
 }
 
 function openBattleArena() {
@@ -1027,6 +1355,7 @@ function openBattleArena() {
 
 function openRewards() {
   updateLobbyRewards();
+  renderDailyRewards();
   showModal("rewardsModal");
 }
 
@@ -1070,6 +1399,10 @@ function renderWinStars(stars) {
   [...winStars.children].forEach((star, index) => {
     star.textContent = index < stars ? "★" : "☆";
     star.classList.toggle("earned", index < stars);
+    star.classList.remove("star-pop");
+    if (index < stars) {
+      window.setTimeout(() => star.classList.add("star-pop"), 120 + index * 170);
+    }
   });
 
   winRating.textContent = stars === 3
@@ -1177,10 +1510,13 @@ function applyWorldTheme(level) {
 
   const shell = document.querySelector(".game-shell");
   if (shell) {
+    shell.dataset.worldSymbol = WORLD_SYMBOLS[level.world] || "⚡";
     shell.classList.remove("world-enter");
     void shell.offsetWidth;
     shell.classList.add("world-enter");
   }
+
+  if (musicEnabled && musicTimer) restartBackgroundMusic();
 }
 
 function loadPuzzle(level, mode = "campaign") {
@@ -1358,6 +1694,10 @@ function rotateTile(index) {
   movesText.textContent = moves;
 
   const tile = getTile(index);
+  tile?.classList.remove("tile-turning","unpowered-flash");
+  void tile?.offsetWidth;
+  tile?.classList.add("tile-turning");
+  window.setTimeout(() => tile?.classList.remove("tile-turning"), 190);
   const rotor = tile?.querySelector(".wire-rotor");
   if (rotor) rotor.style.setProperty("--rot", rotations[index]);
 
@@ -1367,7 +1707,14 @@ function rotateTile(index) {
   playGameSound("wire");
   vibrate(12);
 
-  window.setTimeout(() => updatePower(true), 105);
+  window.setTimeout(() => {
+    updatePower(true);
+    const updatedTile = getTile(index);
+    if (updatedTile && !powered.has(index)) {
+      updatedTile.classList.add("unpowered-flash");
+      window.setTimeout(() => updatedTile.classList.remove("unpowered-flash"), 320);
+    }
+  }, 105);
 }
 
 function getTile(index) {
@@ -1412,10 +1759,20 @@ function computePowered() {
 }
 
 function updatePower(checkWin = false) {
+  const previouslyPowered = new Set(powered);
   powered = computePowered();
 
   solvedMasks.forEach((_, index) => {
-    getTile(index)?.classList.toggle("powered", powered.has(index));
+    const tile = getTile(index);
+    const isPowered = powered.has(index);
+    tile?.classList.toggle("powered", isPowered);
+
+    if (isPowered && !previouslyPowered.has(index)) {
+      tile?.classList.remove("power-arrive");
+      void tile?.offsetWidth;
+      tile?.classList.add("power-arrive");
+      window.setTimeout(() => tile?.classList.remove("power-arrive"), 430);
+    }
   });
 
   const litBulbs = bulbs.filter(index => powered.has(index)).length;
@@ -1838,6 +2195,21 @@ function completeLevel() {
 
   evaluateAchievements(true);
   saveProgress();
+
+  if (winMovesValue) winMovesValue.textContent = String(moves);
+  if (winTimeValue) winTimeValue.textContent = formatTime(elapsed);
+  if (winBestValue) {
+    if (gameMode === "campaign") {
+      const best = progress.best[String(currentLevel)];
+      winBestValue.textContent = best ? `${best.moves} / ${formatTime(best.time)}` : "—";
+    } else if (gameMode === "daily") {
+      const best = progress.daily[activeDailyKey];
+      winBestValue.textContent = best ? `${best.moves} / ${formatTime(best.time)}` : "—";
+    } else {
+      winBestValue.textContent = `Run ${endlessRun}`;
+    }
+  }
+
   renderWinStars(earnedStars);
   updateHomeScreen();
   makeConfetti();
@@ -1937,11 +2309,13 @@ function applyAudioLevels() {
   const ratio = Math.max(.4, Math.min(1.5, masterVolumePercent / 100));
 
   if (sfxMasterGain) {
-    sfxMasterGain.gain.setTargetAtTime(3.15 * ratio, audioContext?.currentTime || 0, .015);
+    const sfxRatio = Math.max(0, Math.min(1.2, sfxVolumePercent / 100));
+    sfxMasterGain.gain.setTargetAtTime(3.15 * ratio * sfxRatio, audioContext?.currentTime || 0, .015);
   }
 
   if (musicMasterGain) {
-    musicMasterGain.gain.setTargetAtTime(2.55 * ratio, audioContext?.currentTime || 0, .02);
+    const musicRatio = Math.max(0, Math.min(1.2, musicVolumePercent / 100));
+    musicMasterGain.gain.setTargetAtTime(2.55 * ratio * musicRatio, audioContext?.currentTime || 0, .02);
   }
 
   if (audioOutputGain) {
@@ -2174,6 +2548,14 @@ function scheduleMusicBar() {
 
   const theme = MUSIC_THEMES[selectedMusicTheme] || MUSIC_THEMES.neon;
   const onHome = homeScreen && !homeScreen.classList.contains("hidden");
+  const worldKey = activeLevel?.world || LEVELS[currentLevel]?.world || "spark";
+  const worldMusic = {
+    spark:{ pitch:1, speed:1 }, neon:{ pitch:1.06, speed:1.06 }, bio:{ pitch:.94, speed:.94 },
+    quantum:{ pitch:1.08, speed:.92 }, master:{ pitch:.98, speed:1.04 }, arctic:{ pitch:.88, speed:.86 },
+    solar:{ pitch:1.10, speed:1.08 }, cyber:{ pitch:1.05, speed:1.10 }, ocean:{ pitch:.92, speed:.90 },
+    plasma:{ pitch:1.12, speed:1.14 }, retro:{ pitch:1, speed:1.08 }, void:{ pitch:.82, speed:.80 },
+    infinity:{ pitch:1.14, speed:1.12 }, daily:{ pitch:1.04, speed:1 }, endless:{ pitch:1.08, speed:1.08 }
+  }[worldKey] || { pitch:1, speed:1 };
   const bars = onHome ? theme.home : theme.game;
   const notes = bars[musicBarIndex % bars.length];
   musicBarIndex += 1;
@@ -2181,7 +2563,7 @@ function scheduleMusicBar() {
   const step = theme.interval / 1000 / 4;
   notes.forEach((freq, index) => {
     playMusicTone(
-      freq,
+      freq * worldMusic.pitch,
       Math.max(.18, step * .72),
       .0052 * theme.volume,
       index * step,
@@ -2189,7 +2571,7 @@ function scheduleMusicBar() {
     );
   });
 
-  playMusicTone(notes[0] / 2, Math.max(.8, (theme.interval / 1000) * .92), .0032 * theme.volume, 0, theme.bassType);
+  playMusicTone((notes[0] / 2) * worldMusic.pitch, Math.max(.8, (theme.interval / 1000) * .92), .0032 * theme.volume, 0, theme.bassType);
 }
 
 function restartBackgroundMusic() {
@@ -2203,7 +2585,12 @@ function startBackgroundMusic() {
   getAudioContext();
   const theme = MUSIC_THEMES[selectedMusicTheme] || MUSIC_THEMES.neon;
   scheduleMusicBar();
-  musicTimer = window.setInterval(scheduleMusicBar, theme.interval);
+  const worldKey = activeLevel?.world || LEVELS[currentLevel]?.world || "spark";
+  const speed = {
+    arctic:.86, ocean:.90, void:.80, quantum:.92,
+    solar:1.08, cyber:1.10, plasma:1.14, retro:1.08, infinity:1.12, endless:1.08
+  }[worldKey] || 1;
+  musicTimer = window.setInterval(scheduleMusicBar, Math.round(theme.interval / speed));
 }
 
 function selectMusicTheme(themeKey) {
@@ -2336,6 +2723,10 @@ function syncSettingsUI() {
 
   if (masterVolumeSlider) masterVolumeSlider.value = String(masterVolumePercent);
   if (masterVolumeValue) masterVolumeValue.textContent = `${masterVolumePercent}%`;
+  if (sfxVolumeSlider) sfxVolumeSlider.value = String(sfxVolumePercent);
+  if (sfxVolumeValue) sfxVolumeValue.textContent = `${sfxVolumePercent}%`;
+  if (musicVolumeSlider) musicVolumeSlider.value = String(musicVolumePercent);
+  if (musicVolumeValue) musicVolumeValue.textContent = `${musicVolumePercent}%`;
 
   if (hapticSettingState) hapticSettingState.textContent = hapticsEnabled ? "ON" : "OFF";
   hapticToggleBtn?.classList.toggle("off", !hapticsEnabled);
@@ -2375,6 +2766,28 @@ function setMasterVolume(value, persist = true) {
   }
 }
 
+function setSfxVolume(value, persist = true) {
+  sfxVolumePercent = Math.max(0, Math.min(120, Math.round(Number(value) || 0)));
+  applyAudioLevels();
+  if (sfxVolumeSlider) sfxVolumeSlider.value = String(sfxVolumePercent);
+  if (sfxVolumeValue) sfxVolumeValue.textContent = `${sfxVolumePercent}%`;
+  if (persist) {
+    progress.settings.sfxVolume = sfxVolumePercent;
+    saveProgress();
+  }
+}
+
+function setMusicVolume(value, persist = true) {
+  musicVolumePercent = Math.max(0, Math.min(120, Math.round(Number(value) || 0)));
+  applyAudioLevels();
+  if (musicVolumeSlider) musicVolumeSlider.value = String(musicVolumePercent);
+  if (musicVolumeValue) musicVolumeValue.textContent = `${musicVolumePercent}%`;
+  if (persist) {
+    progress.settings.musicVolume = musicVolumePercent;
+    saveProgress();
+  }
+}
+
 function setHapticsEnabled(enabled) {
   hapticsEnabled = Boolean(enabled);
   progress.settings.haptics = hapticsEnabled;
@@ -2400,6 +2813,7 @@ function vibrate(pattern) {
 function closeTopGameModal() {
   const priority = [
     "hintRechargeModal",
+    "backupModal",
     "battleModal",
     "rewardsModal",
     "profileModal",
@@ -2536,6 +2950,20 @@ profileNameInput?.addEventListener("input", () => {
   profilePreviewName.textContent = cleaned || "Player";
   profileError?.classList.add("hidden");
 });
+profileFrameGrid?.addEventListener("click", event => {
+  const button = event.target.closest("[data-profile-frame]");
+  if (!button || button.disabled) return;
+  pendingProfileFrame = button.dataset.profileFrame;
+  applyAvatarFrame(profileAvatarPreview, pendingProfileFrame);
+  renderProfileCosmetics();
+  playGameSound("profile");
+  vibrate(10);
+});
+profileTitleSelect?.addEventListener("change", () => {
+  pendingProfileTitle = profileTitleSelect.value || "Grid Rookie";
+  if (profilePreviewTitle) profilePreviewTitle.textContent = pendingProfileTitle;
+  playGameSound("profile");
+});
 profileNameInput?.addEventListener("keydown", event => {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -2554,8 +2982,19 @@ masterVolumeSlider?.addEventListener("change", () => {
   setMasterVolume(masterVolumeSlider.value, true);
   playGameSound("toggle");
 });
+sfxVolumeSlider?.addEventListener("input", () => setSfxVolume(sfxVolumeSlider.value, false));
+sfxVolumeSlider?.addEventListener("change", () => {
+  setSfxVolume(sfxVolumeSlider.value, true);
+  playGameSound("toggle");
+});
+musicVolumeSlider?.addEventListener("input", () => setMusicVolume(musicVolumeSlider.value, false));
+musicVolumeSlider?.addEventListener("change", () => setMusicVolume(musicVolumeSlider.value, true));
 hapticToggleBtn?.addEventListener("click", () => setHapticsEnabled(!hapticsEnabled));
 rewardAdBtn?.addEventListener("click", requestRewardedHint);
+claimDailyRewardBtn?.addEventListener("click", claimDailyReward);
+exportBackupBtn?.addEventListener("click", openBackupExport);
+importBackupBtn?.addEventListener("click", openBackupImport);
+backupPrimaryBtn?.addEventListener("click", handleBackupPrimary);
 battleBtn?.addEventListener("click", openBattleArena);
 bottomBattleBtn?.addEventListener("click", openBattleArena);
 rewardStripBtn?.addEventListener("click", openRewards);
@@ -2633,6 +3072,7 @@ document.addEventListener("keydown", event => {
     hideModal("profileModal");
     hideModal("battleModal");
     hideModal("rewardsModal");
+    hideModal("backupModal");
     hideModal("hintRechargeModal");
   }
 });
