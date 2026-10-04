@@ -5502,3 +5502,370 @@ body.native-android .game-bottom-nav {
 @media (max-width:360px) {
   .music-theme-grid { grid-template-columns:1fr; }
 }
+
+
+/* ======================================================================
+   PREMIUM POLISH PACK — win, current flow, worlds, rewards, cosmetics
+   ====================================================================== */
+
+/* 1) More satisfying level-complete moment */
+.win-modal {
+  background:
+    radial-gradient(circle at 50% 5%, rgba(var(--world-rgb),.16), transparent 36%),
+    linear-gradient(180deg, rgba(18,48,64,.98), rgba(7,24,34,.99));
+}
+.win-performance-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:10px 0 9px;
+}
+.win-performance-grid > div {
+  padding:9px 5px;
+  border:1px solid rgba(210,240,255,.09);
+  border-radius:13px;
+  background:rgba(255,255,255,.035);
+}
+.win-performance-grid small,
+.win-performance-grid strong { display:block; }
+.win-performance-grid small {
+  color:#7593a1;
+  font-size:6px;
+  font-weight:950;
+  letter-spacing:.13em;
+}
+.win-performance-grid strong {
+  margin-top:3px;
+  color:#f4fbff;
+  font-size:13px;
+}
+.win-world-copy {
+  margin:8px 0 12px !important;
+  color:#8fa8b4 !important;
+  font-size:9px !important;
+}
+.win-next-btn {
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 10px 28px rgba(var(--world-rgb),.20);
+}
+.win-next-btn::after {
+  content:"";
+  position:absolute;
+  inset:-40% auto -40% -30%;
+  width:25%;
+  transform:skewX(-22deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.52),transparent);
+  animation:winButtonShine 2.8s ease-in-out infinite;
+}
+.win-stars .star-pop {
+  animation:winStarPop .55s cubic-bezier(.18,.88,.28,1.35) both;
+}
+@keyframes winStarPop {
+  0% { transform:scale(.15) rotate(-24deg); opacity:.15; }
+  70% { transform:scale(1.32) rotate(7deg); }
+  100% { transform:scale(1) rotate(0); opacity:1; }
+}
+@keyframes winButtonShine {
+  0%,65% { left:-32%; opacity:0; }
+  72% { opacity:.85; }
+  95%,100% { left:118%; opacity:0; }
+}
+
+/* 2) Stronger visual identity per world */
+.game-shell {
+  position:relative;
+  isolation:isolate;
+}
+.game-shell::after {
+  content:attr(data-world-symbol);
+  position:absolute;
+  z-index:-1;
+  right:12px;
+  top:54px;
+  color:rgba(var(--world-rgb),.055);
+  font-size:clamp(72px,22vw,118px);
+  line-height:1;
+  filter:drop-shadow(0 0 18px rgba(var(--world-rgb),.08));
+  pointer-events:none;
+}
+body[data-world="arctic"] .board-frame::after,
+body[data-world="ocean"] .board-frame::after,
+body[data-world="void"] .board-frame::after,
+body[data-world="plasma"] .board-frame::after {
+  content:"";
+  position:absolute;
+  inset:8%;
+  z-index:-1;
+  border-radius:28%;
+  background:
+    radial-gradient(circle at 18% 20%,rgba(var(--world-rgb),.11),transparent 18%),
+    radial-gradient(circle at 80% 68%,rgba(var(--world-rgb-2),.09),transparent 22%);
+  animation:worldAmbient 4.8s ease-in-out infinite alternate;
+}
+@keyframes worldAmbient {
+  from { transform:scale(.96) rotate(-1deg); opacity:.55; }
+  to { transform:scale(1.05) rotate(1deg); opacity:.9; }
+}
+
+/* 3) Electricity visibly travels through powered wires */
+.wire-arm::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  opacity:0;
+  pointer-events:none;
+}
+.tile.powered .wire-arm::after {
+  opacity:.9;
+  background:linear-gradient(90deg,transparent 0 18%,rgba(255,255,255,.96) 46%,transparent 72%);
+  background-size:220% 100%;
+  mix-blend-mode:screen;
+}
+.tile.powered .wire-arm.e::after,
+.tile.powered .wire-arm.w::after {
+  animation:currentTravelH .68s linear infinite;
+}
+.tile.powered .wire-arm.n::after,
+.tile.powered .wire-arm.s::after {
+  background:linear-gradient(180deg,transparent 0 18%,rgba(255,255,255,.96) 46%,transparent 72%);
+  background-size:100% 220%;
+  animation:currentTravelV .68s linear infinite;
+}
+@keyframes currentTravelH {
+  from { background-position:140% 0; }
+  to { background-position:-120% 0; }
+}
+@keyframes currentTravelV {
+  from { background-position:0 140%; }
+  to { background-position:0 -120%; }
+}
+
+/* 4) Touch + power feedback */
+.tile-turning { animation:tileTapBounce .19s ease-out; }
+.tile.power-arrive {
+  animation:powerArrival .42s ease-out;
+}
+.tile.unpowered-flash:not(.powered) {
+  border-color:rgba(255,100,108,.32);
+  box-shadow:0 0 16px rgba(255,73,87,.10), inset 0 0 14px rgba(255,73,87,.035);
+}
+@keyframes tileTapBounce {
+  0% { transform:scale(1); }
+  45% { transform:scale(.93); }
+  100% { transform:scale(1); }
+}
+@keyframes powerArrival {
+  0% { transform:scale(.96); filter:brightness(1); }
+  48% { transform:scale(1.045); filter:brightness(1.34); }
+  100% { transform:scale(1); filter:brightness(1); }
+}
+
+/* 6) Actual daily reward UI */
+.reward-today-card {
+  display:grid;
+  grid-template-columns:42px 1fr auto;
+  align-items:center;
+  gap:9px;
+  margin:10px 0;
+  padding:9px;
+  border:1px solid rgba(255,218,72,.16);
+  border-radius:15px;
+  background:linear-gradient(135deg,rgba(255,207,48,.085),rgba(89,232,255,.035));
+  text-align:left;
+}
+.reward-today-card > span {
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  background:rgba(255,215,66,.09);
+  font-size:20px;
+}
+.reward-today-card small,.reward-today-card strong { display:block; }
+.reward-today-card small { color:#8c875e; font-size:6px; font-weight:950; letter-spacing:.12em; }
+.reward-today-card strong { margin-top:3px; font-size:10px; }
+.reward-today-card > b { color:#ffe16a; font-size:7px; letter-spacing:.08em; }
+.future-reward-track button.reward-day {
+  border:1px solid rgba(210,240,255,.08);
+  font:inherit;
+}
+.reward-day span,.reward-day small { display:block; }
+.reward-day span { font-size:13px; }
+.reward-day small { margin-top:2px; font-size:6px; }
+.reward-day.current {
+  border-color:rgba(255,221,80,.50);
+  color:#ffe16b;
+  background:rgba(255,210,55,.10);
+  box-shadow:0 0 12px rgba(255,205,44,.08);
+}
+.reward-day.claimed {
+  color:#17331f;
+  background:#7befa1;
+}
+.claim-reward-btn { margin-top:10px; }
+.claim-reward-btn:disabled { opacity:.58; filter:saturate(.65); }
+
+/* 7) Profile cosmetics */
+.profile-title-line {
+  margin:0 0 4px !important;
+  color:#ffe06a !important;
+  font-size:8px !important;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+.profile-cosmetics {
+  display:grid;
+  gap:12px;
+  margin:4px 0 14px;
+}
+.profile-frame-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+}
+.profile-frame-grid button {
+  display:grid;
+  justify-items:center;
+  gap:3px;
+  min-height:58px;
+  padding:6px 3px;
+  border:1px solid rgba(210,240,255,.08);
+  border-radius:12px;
+  color:#a9bfca;
+  background:rgba(255,255,255,.03);
+}
+.profile-frame-grid button i {
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  font-style:normal;
+  font-size:18px;
+}
+.profile-frame-grid button small { font-size:6px; }
+.profile-frame-grid button.selected {
+  border-color:rgba(255,221,78,.46);
+  background:rgba(255,210,48,.07);
+}
+.profile-frame-grid button.locked {
+  opacity:.34;
+}
+[data-frame="cyan"] {
+  border-color:#55e9ff !important;
+  box-shadow:0 0 0 2px rgba(85,233,255,.11),0 0 16px rgba(85,233,255,.22) !important;
+}
+[data-frame="gold"] {
+  border-color:#ffd84e !important;
+  box-shadow:0 0 0 2px rgba(255,216,78,.12),0 0 18px rgba(255,197,44,.25) !important;
+}
+[data-frame="purple"] {
+  border-color:#ad77ff !important;
+  box-shadow:0 0 0 2px rgba(173,119,255,.12),0 0 18px rgba(155,87,255,.24) !important;
+}
+.profile-title-picker > span {
+  display:block;
+  margin-bottom:6px;
+  color:#8faebb;
+  font-size:7px;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+.profile-title-picker select {
+  width:100%;
+  height:43px;
+  padding:0 11px;
+  border:1px solid rgba(204,239,255,.12);
+  border-radius:12px;
+  color:#eefaff;
+  background:#153344;
+  font:inherit;
+  font-size:10px;
+  font-weight:800;
+}
+
+/* 8) Separate SFX / music sliders */
+.compact-volume-row {
+  padding-top:9px;
+  padding-bottom:9px;
+}
+.compact-volume-row .setting-icon {
+  width:36px;
+  height:36px;
+}
+
+/* 9) Offline backup/restore */
+.settings-backup-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.settings-backup-actions button {
+  display:grid;
+  grid-template-columns:30px 1fr;
+  align-items:center;
+  gap:7px;
+  padding:8px;
+  border:1px solid rgba(210,240,255,.09);
+  border-radius:13px;
+  color:#e9f7fc;
+  background:rgba(255,255,255,.03);
+  text-align:left;
+}
+.settings-backup-actions button > span {
+  grid-row:1/3;
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  border-radius:9px;
+  background:rgba(89,232,255,.07);
+}
+.settings-backup-actions strong { font-size:8px; }
+.settings-backup-actions small { color:#718e9b; font-size:6px; }
+.backup-modal textarea {
+  width:100%;
+  margin:10px 0 6px;
+  padding:10px;
+  resize:none;
+  border:1px solid rgba(210,240,255,.12);
+  outline:0;
+  border-radius:13px;
+  color:#dff8ff;
+  background:rgba(0,17,27,.55);
+  font:600 9px/1.45 monospace;
+}
+.backup-status {
+  min-height:16px;
+  margin:4px 0 8px !important;
+  color:#8fd9eb !important;
+  font-size:8px !important;
+}
+
+/* 10) Battle-ready identity polish */
+.battle-preview [data-frame] {
+  border-radius:11px;
+  padding:3px;
+}
+.battle-profile-note {
+  border-color:rgba(90,229,255,.14);
+}
+.battle-profile-note::after {
+  content:"PROFILE SCHEMA v1 • READY FOR FUTURE SYNC";
+  display:block;
+  grid-column:1/-1;
+  margin-top:3px;
+  color:#557786;
+  font-size:5px;
+  font-weight:900;
+  letter-spacing:.09em;
+}
+
+@media (max-height:720px) {
+  .win-performance-grid { margin:6px 0; }
+  .profile-cosmetics { gap:8px; margin-bottom:10px; }
+}
