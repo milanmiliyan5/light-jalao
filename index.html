@@ -18,7 +18,7 @@
   <link rel="icon" href="icons/light-jalao-icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/light-jalao-icon.svg" />
   <title>Light Jalao 💡</title>
-  <link rel="stylesheet" href="style.css?v=20261004-music-themes-v1" />
+  <link rel="stylesheet" href="style.css?v=20261004-premium-pack-v1" />
 </head>
 <body>
   <div class="bg-orb bg-orb-one"></div>
@@ -265,8 +265,13 @@
       <h2 id="winTitle">Lights on! ✨</h2>
       <div class="win-stars" id="winStars" aria-label="Level rating"><span>☆</span><span>☆</span><span>☆</span></div>
       <p class="win-rating" id="winRating">Circuit cleared</p>
-      <p id="winCopy">Every bulb is glowing.</p>
-      <button class="primary-btn" id="nextBtn">Next Level →</button>
+      <div class="win-performance-grid">
+        <div><small>MOVES</small><strong id="winMovesValue">0</strong></div>
+        <div><small>TIME</small><strong id="winTimeValue">00:00</strong></div>
+        <div><small>BEST</small><strong id="winBestValue">—</strong></div>
+      </div>
+      <p class="win-world-copy" id="winCopy">Every bulb is glowing.</p>
+      <button class="primary-btn win-next-btn" id="nextBtn">Next Level →</button>
       <button class="text-btn" id="replayBtn">Replay this puzzle</button>
     </section>
   </div>
@@ -316,7 +321,7 @@
       <h2>Battle Arena</h2>
       <p>Player vs Player mode is being prepared. Your username, emoji avatar and Player ID are already battle-ready.</p>
       <div class="battle-preview">
-        <div><span id="battleProfileAvatar">😎</span><strong id="battleProfileName">Player</strong><small>YOU</small></div>
+        <div><span id="battleProfileAvatar" data-frame="basic">😎</span><strong id="battleProfileName">Player</strong><small id="battleProfileTitle">GRID ROOKIE • UNRANKED</small></div>
         <b>VS</b>
         <div><span>👾</span><strong>Opponent</strong><small>COMING SOON</small></div>
       </div>
@@ -330,22 +335,28 @@
       <div class="reward-modal-icon">🎁</div>
       <span class="mini-label">PLAYER REWARDS</span>
       <h2>Daily Power Rewards</h2>
-      <p>Keep playing Daily Challenge to build your streak. Reward cosmetics can plug into this system later.</p>
+      <p>Open the game each day and claim one offline reward. Hints and cosmetics stay saved on this device.</p>
       <div class="reward-summary-grid">
-        <div><span>🔥</span><strong id="rewardModalStreak">0</strong><small>Current streak</small></div>
+        <div><span>🔥</span><strong id="rewardModalStreak">0</strong><small>Daily streak</small></div>
         <div><span>⭐</span><strong id="rewardModalStars">0</strong><small>Total stars</small></div>
         <div><span>🏆</span><strong id="rewardModalAchievements">0</strong><small>Trophies</small></div>
       </div>
-      <div class="future-reward-track">
-        <span class="reward-day active">1</span>
-        <span class="reward-day">2</span>
-        <span class="reward-day">3</span>
-        <span class="reward-day special">🎁</span>
-        <span class="reward-day">5</span>
-        <span class="reward-day">6</span>
-        <span class="reward-day special">🏆</span>
+      <div class="reward-today-card">
+        <span id="rewardTodayIcon">✦</span>
+        <div><small>TODAY'S DROP</small><strong id="rewardTodayText">+1 Smart Hint</strong></div>
+        <b id="rewardTodayDay">DAY 1</b>
       </div>
-      <small class="future-reward-note">Reward claiming will be enabled with the future online rewards system.</small>
+      <div class="future-reward-track" id="dailyRewardTrack">
+        <button class="reward-day" type="button" data-reward-day="1"><span>✦</span><small>1</small></button>
+        <button class="reward-day" type="button" data-reward-day="2"><span>🟦</span><small>2</small></button>
+        <button class="reward-day" type="button" data-reward-day="3"><span>✦</span><small>3</small></button>
+        <button class="reward-day special" type="button" data-reward-day="4"><span>🏷</span><small>4</small></button>
+        <button class="reward-day" type="button" data-reward-day="5"><span>✦</span><small>5</small></button>
+        <button class="reward-day" type="button" data-reward-day="6"><span>🟨</span><small>6</small></button>
+        <button class="reward-day special" type="button" data-reward-day="7"><span>🏆</span><small>7</small></button>
+      </div>
+      <button class="primary-btn claim-reward-btn" id="claimDailyRewardBtn" type="button">Claim Today's Reward</button>
+      <small class="future-reward-note" id="rewardClaimStatus">A new reward becomes available on your next local day.</small>
     </section>
   </div>
 
@@ -354,10 +365,11 @@
       <button class="modal-close" data-close="profileModal" aria-label="Close">×</button>
 
       <div class="profile-hero">
-        <div class="profile-avatar-large" id="profileAvatarPreview">😎</div>
+        <div class="profile-avatar-large" id="profileAvatarPreview" data-frame="basic">😎</div>
         <div>
           <span class="mini-label">PLAYER PROFILE</span>
           <h2 id="profilePreviewName">Player</h2>
+          <p class="profile-title-line" id="profilePreviewTitle">Grid Rookie</p>
           <p class="profile-id-line">ID <b id="profilePlayerId">LJ-00000000</b></p>
         </div>
       </div>
@@ -374,6 +386,22 @@
           <small>No real photos</small>
         </div>
         <div class="emoji-avatar-grid" id="emojiAvatarGrid" role="listbox" aria-label="Choose avatar"></div>
+      </div>
+
+      <div class="profile-cosmetics">
+        <div>
+          <div class="profile-section-head"><span>AVATAR FRAME</span><small>Unlock from rewards & stars</small></div>
+          <div class="profile-frame-grid" id="profileFrameGrid">
+            <button type="button" data-profile-frame="basic"><i>😎</i><small>Base</small></button>
+            <button type="button" data-profile-frame="cyan"><i>😎</i><small>Cyan</small></button>
+            <button type="button" data-profile-frame="gold"><i>😎</i><small>Gold</small></button>
+            <button type="button" data-profile-frame="purple"><i>😎</i><small>Nova</small></button>
+          </div>
+        </div>
+        <label class="profile-title-picker">
+          <span>PLAYER TITLE</span>
+          <select id="profileTitleSelect" aria-label="Player title"></select>
+        </label>
       </div>
 
       <div class="profile-stats">
@@ -434,9 +462,21 @@
         </div>
         <div class="setting-volume-row">
           <span class="setting-icon">🔊</span>
-          <span class="volume-copy"><strong>Game Volume</strong><small>Louder master output for music + effects</small></span>
+          <span class="volume-copy"><strong>Game Volume</strong><small>Master output for the whole game</small></span>
           <b id="masterVolumeValue">120%</b>
           <input id="masterVolumeSlider" type="range" min="40" max="150" step="5" value="120" aria-label="Game volume" />
+        </div>
+        <div class="setting-volume-row compact-volume-row">
+          <span class="setting-icon">♪</span>
+          <span class="volume-copy"><strong>SFX Volume</strong><small>Clicks, wires, bulbs and win effects</small></span>
+          <b id="sfxVolumeValue">100%</b>
+          <input id="sfxVolumeSlider" type="range" min="0" max="120" step="5" value="100" aria-label="Sound effects volume" />
+        </div>
+        <div class="setting-volume-row compact-volume-row">
+          <span class="setting-icon">♫</span>
+          <span class="volume-copy"><strong>Music Volume</strong><small>Background arcade music only</small></span>
+          <b id="musicVolumeValue">100%</b>
+          <input id="musicVolumeSlider" type="range" min="0" max="120" step="5" value="100" aria-label="Music volume" />
         </div>
         <button class="setting-row" id="hapticToggleBtn" type="button">
           <span class="setting-icon">〰</span>
@@ -449,7 +489,23 @@
           <b id="performanceState">AUTO</b>
         </div>
       </div>
-      <div class="settings-note"><span>⚡</span><p>Campaign, Endless, stars and progress stay available offline.</p></div>
+      <div class="settings-backup-actions">
+        <button type="button" id="exportBackupBtn"><span>⇧</span><strong>Backup Progress</strong><small>Create a restore code</small></button>
+        <button type="button" id="importBackupBtn"><span>⇩</span><strong>Restore Progress</strong><small>Paste a backup code</small></button>
+      </div>
+      <div class="settings-note"><span>⚡</span><p>Campaign, Endless, rewards, profile cosmetics and progress stay available offline.</p></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="backupModal" aria-hidden="true">
+    <section class="modal backup-modal">
+      <button class="modal-close" data-close="backupModal" aria-label="Close">×</button>
+      <span class="mini-label">PROGRESS BACKUP</span>
+      <h2 id="backupModalTitle">Backup Code</h2>
+      <p id="backupModalCopy">Copy this code somewhere safe. You can restore it on another device.</p>
+      <textarea id="backupCodeInput" rows="7" spellcheck="false" autocomplete="off" placeholder="Backup code"></textarea>
+      <p class="backup-status" id="backupStatus"></p>
+      <button class="primary-btn" id="backupPrimaryBtn" type="button">Copy Backup Code</button>
     </section>
   </div>
 
@@ -482,6 +538,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=20261004-music-themes-v1"></script>
+  <script src="script.js?v=20261004-premium-pack-v1"></script>
 </body>
 </html>
