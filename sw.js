@@ -1,4 +1,4 @@
-const CACHE_NAME = "light-jalao-premium-v3";
+const CACHE_NAME = "light-jalao-premium-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
